@@ -67,10 +67,10 @@ sound abstraction/concretization relation is actually supplied.
 
 ## Fixed-point statuses
 
-Compute a canonical state hash over source identity, decision contract,
-semantic model, evidence/corpus manifests, claim ledger, coordinate receipts,
-counterexamples, Kerf results, candidate frontier, work graph, accepted diff,
-and provider versions.
+Use `kerf.optimization-campaign.v1` and let `kerf-cycle` compute separate
+content identities for the search basis, decision state, and full campaign
+history. Do not accept `generators_exhausted`, `optimum`, or another
+caller-declared closure boolean.
 
 Return `decision_fixed_point` only when:
 
@@ -79,12 +79,13 @@ Return `decision_fixed_point` only when:
 - every decision-driving positive claim has a checker or executable falsifier;
 - every mandatory correspondence square has an accepted artifact/execution
   receipt at the required closure;
-- all declared finite generators relevant to the decision are exhausted;
+- every current versioned generator/scope obligation has a complete receipt;
 - no newly nondominated eligible candidate remains; and
-- one complete scheduler sweep changes no canonical state coordinate.
+- two distinct, complete, quiescent sweeps bind the unchanged decision state.
 
-Return `bounded_exhaustive_fixed_point` only when all declared finite universes
-and candidate generators were enumerated completely. Return
+Return `bounded_exhaustive_fixed_point` only when the latest complete sweep
+exactly covers the declared finite universe; unlike an open-ended search, one
+such enumeration is sufficient because the closure is explicit. Return
 `budget_exhausted_with_unknowns` when any resource bound fires first. A time or
 mutation budget is never a success criterion.
 
@@ -99,14 +100,19 @@ that universe and must retain that limitation in the result.
 
 ## Reopening and information gain
 
-Do not rerun an unchanged deterministic campaign. Reopen when at least one of
-these changes:
+Do not rerun an unchanged deterministic campaign after its required sweep
+receipts exist. Content identity reopens matching and coverage when at least
+one of these changes:
 
 - subject source/build/environment identity;
 - decision contract or protected observations;
 - evidence or corpus manifest;
 - a decision-relevant falsifier, provider, or finite bound;
 - an accepted transformation that changes the subject.
+
+It also reopens when a generator implementation/scope, metric policy,
+transformation policy, evaluator executable/skill, current candidate, blocker,
+unknown, or candidate evidence changes.
 
 The same revision may merit another campaign when the experiment frontier is
 new. The same revision with the same frontier should be a cheap hash/no-op.

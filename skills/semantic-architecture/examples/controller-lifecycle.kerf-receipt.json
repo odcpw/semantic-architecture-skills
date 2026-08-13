@@ -1,0 +1,1 @@
+{"schema_version":"kerf.result.v1","tool_version":"0.1.0","operation":"validate-lts","input_sha256":"1800f754ecdff21bdc8ccde82633e0ddc27b2d96713e7d22d9bb280aae291e23","status":"ok","limits":{"max_product_states":1000000,"max_pairs":1000000,"max_witness_length":100000},"result":{"machine_states":6,"actions":7,"context_states":1,"context_present":true}}

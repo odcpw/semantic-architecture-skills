@@ -1,5 +1,6 @@
 pub mod converge;
 pub mod coordinates;
+pub mod cycle;
 pub mod execution;
 pub mod manifest;
 pub mod observe;

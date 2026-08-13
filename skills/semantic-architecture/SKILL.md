@@ -13,7 +13,8 @@ evidence, closure, epistemic class, and falsifier before using it to drive code.
 
 The implementation lives in the Semantic Architecture project and depends on
 Behavioral Factorization as its exact finite kernel. On Oliver's machine its
-canonical checkout is `/home/oliver/Projects/odcpw/semantic-architecture`.
+canonical checkout is
+`/home/oliver/Projects/odcpw/semantic-architecture-skills/skills/semantic-architecture`.
 
 ## Route the task
 
@@ -52,6 +53,9 @@ cargo run --quiet --bin kerf-evidence -- snapshot-topology ROOT
 cargo run --quiet --bin kerf-evidence -- expand-parity-corpus PARITY_SPEC.json
 cargo run --quiet --bin kerf-evidence -- execute EXECUTION_PLAN.json --require-accepted
 cargo run --quiet --bin kerf-evidence -- evaluate DECISION_CONTRACT.json PACKAGE.json... --require-fixed-point
+cargo run --quiet --bin kerf-cycle -- identity
+cargo run --quiet --bin kerf-cycle -- hashes CAMPAIGN.json
+cargo run --quiet --bin kerf-cycle -- evaluate CAMPAIGN.json --require-terminal
 ```
 
 All success data is versioned JSON on stdout. Errors are typed JSON on stderr.
@@ -143,23 +147,41 @@ checks until the named decision reaches a declared fixed point or a bound
 expires. Read [convergent-campaigns.md](references/convergent-campaigns.md)
 before designing a whole-repository or repeated audit.
 
-`kerf-evidence evaluate` implements only the stopping predicate. First obtain
-the exact evaluator identity with `kerf-evidence identity` and bind it in the
-decision contract. A changed evaluator binary or skill manual rejects the old
-contract even if the human version string is unchanged. The first complete sweep returns a
-canonical state hash and remains `open`. After the caller has run a second
-complete discovery sweep over the same declared frontier, place that hash in
-`prior_state_sha256` and evaluate again. A fixed point is available only if the
-entire normalized decision contract, evaluator identity, evidence packages,
-claim receipts, mandatory-decision case identities, providers, bounds, and
-nonclaims are unchanged. The tool never infers that the discovery sweep was
-complete.
+For a new adaptive campaign, use `kerf-cycle`, not caller-authored convergence
+booleans. One `kerf.optimization-campaign.v1` state represents either an
+intent-only greenfield subject or a revision-bound brownfield subject. It binds
+the purpose/environment envelope, semantic model, metric vector, versioned
+generator scopes, candidates, receipts, finite universe if one exists,
+unknowns, blockers, and resource consumption.
+
+Obtain the exact evaluator identity with `kerf-cycle identity`. Use `hashes`
+to compute the search basis and decision-state identities that candidate and
+sweep receipts must consume. `evaluate` centrally matches those identities,
+derives budget exhaustion, invokes Kerf's exact product order over every
+represented verified metric vector, and computes generator coverage. The
+schema rejects `generators_exhausted`, `optimum`, or equivalent caller
+assertions.
+
+Open-ended `envelope_stationary` and `frontier_set` require two distinct,
+complete, quiescent sweeps over every current versioned generator scope, both
+bound to the unchanged decision state. A declared finite universe may reach
+`bounded_exhaustive_fixed_point` after one exact enumeration. Changing the
+subject, model, envelope, metrics, evaluator, generator version, scope, current
+candidate, blockers, unknowns, or candidate evidence changes an identity and
+reopens the appropriate work automatically. Read
+[optimization-cycle.md](references/optimization-cycle.md) before authoring a
+campaign state.
+
+`kerf-evidence evaluate` remains available for legacy, package-bound decision
+contracts. It re-audits the evidence packages, but its caller-supplied
+`generators_exhausted` and `retirement_condition_met` fields are not scheduler
+proof and must not be used to claim whole-campaign closure.
 
 Do not repeat an expensive pass when subject revision, evidence, falsifiers,
 providers, bounds, and decision contract are unchanged. A second invocation on
-the same canonical state should be a hash/no-op confirmation. Reopen only for a
-changed subject, a new decision-relevant falsifier, wider declared closure, or
-a prior accepted transformation. Budget exhaustion returns unknowns; it never
+the same canonical state should be a hash/no-op confirmation after the required
+independent sweep receipts exist. Reopen for any identity-bound change or a
+prior accepted transformation. Budget exhaustion returns unknowns; it never
 certifies a fixed point.
 
 ## Maintain the epistemic boundary

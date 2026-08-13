@@ -36,11 +36,17 @@ project-specific truth.
   package against its exact plan, derives finite coverage only through
   mandatory decision paths, binds state to the evaluator executable, and
   requires an unchanged canonical state on a second complete sweep. It is a
-  stopping predicate, not a scheduler.
+  legacy stopping predicate, not a scheduler; its caller-supplied exhaustion
+  flags must not be promoted into whole-campaign closure.
+- `src/cycle.rs` owns the living greenfield/brownfield campaign state,
+  content-addressed search and decision identities, centralized candidate
+  matching, exact represented Pareto frontier, computed generator coverage,
+  and campaign stopping states. Open-ended stationarity requires two distinct
+  complete quiescent sweep receipts bound to the unchanged decision state.
 - `src/bin/kerf-model.rs` and `src/bin/kerf-observe.rs` are machine-facing JSON
   CLIs. `src/bin/kerf-evidence.rs` executes evidence plans and evaluates
-  stopping contracts. Success data belongs on stdout and typed errors on
-  stderr.
+  legacy stopping contracts. `src/bin/kerf-cycle.rs` evaluates living campaign
+  state. Success data belongs on stdout and typed errors on stderr.
 - Formal class and reality contact are independent coordinates. Never promote
   a finite Kerf result, passive source extraction, LLM interpretation, trace,
   or analogy into source-program equivalence.

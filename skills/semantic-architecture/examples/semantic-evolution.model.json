@@ -1,0 +1,754 @@
+{
+  "schema_version": "kerf.semantic-model.v1",
+  "model_id": "semantic-evolution-self-host-v1",
+  "subjects": [
+    {"id": "intent", "kind": "intent"},
+    {
+      "id": "current-tooling",
+      "kind": "candidate",
+      "revision": "2900c16c700a4014de1966d899b871ed73317f45",
+      "build_identity": "semantic-architecture-skills@2900c16"
+    }
+  ],
+  "scopes": [
+    {
+      "id": "optimizer-purpose",
+      "subject": "intent",
+      "contexts": ["greenfield", "brownfield", "self-host"],
+      "workloads": ["held-out-linux-repository", "new-system-construction"],
+      "horizon": "repeat until a confirming whole-system sweep is unchanged",
+      "required_reality_contact": "intervened"
+    },
+    {
+      "id": "controller-projection",
+      "subject": "intent",
+      "contexts": ["greenfield", "brownfield"],
+      "horizon": "one complete optimization campaign"
+    },
+    {
+      "id": "current-tooling-scope",
+      "subject": "current-tooling",
+      "contexts": ["self-host"],
+      "workloads": ["semantic model compilation", "finite checking", "seam scoring"],
+      "required_reality_contact": "observed"
+    }
+  ],
+  "entities": [
+    {
+      "id": "req-unified-modes",
+      "subject": "intent",
+      "label": "One engine constructs new systems and improves existing systems",
+      "kind": "requirement",
+      "modality": "must",
+      "acceptance_claims": ["claim-unified-modes"]
+    },
+    {
+      "id": "req-real-improvement",
+      "subject": "intent",
+      "label": "A campaign repeatedly produces verified code or system improvements",
+      "kind": "requirement",
+      "modality": "must",
+      "acceptance_claims": ["claim-real-improvement"]
+    },
+    {
+      "id": "req-preserve-purpose",
+      "subject": "intent",
+      "label": "Accepted changes preserve hard purpose constraints and protected observations",
+      "kind": "requirement",
+      "modality": "must",
+      "acceptance_claims": ["claim-preserve-purpose"]
+    },
+    {
+      "id": "req-all-metrics",
+      "subject": "intent",
+      "label": "Every declared objective is revisited without an invented scalar score",
+      "kind": "requirement",
+      "modality": "must",
+      "acceptance_claims": ["claim-all-metrics"]
+    },
+    {
+      "id": "req-computed-stop",
+      "subject": "intent",
+      "label": "Stopping and reopening are computed from coverage and state identity",
+      "kind": "requirement",
+      "modality": "must",
+      "acceptance_claims": ["claim-computed-stop"]
+    },
+    {
+      "id": "req-accretion",
+      "subject": "intent",
+      "label": "Real project outcomes improve generators, executors, and skills",
+      "kind": "requirement",
+      "modality": "must",
+      "acceptance_claims": ["claim-accretion"]
+    },
+
+    {
+      "id": "purpose-envelope",
+      "subject": "intent",
+      "label": "Purpose and environment envelope",
+      "kind": "carrier",
+      "fact": "purpose-environment-contract",
+      "authority": "purpose-authority",
+      "identity": "content-addressed-envelope",
+      "lifetime": "campaign and every reopening",
+      "reset": "operator-approved envelope revision"
+    },
+    {
+      "id": "campaign-state",
+      "subject": "intent",
+      "label": "Living optimization campaign state",
+      "kind": "carrier",
+      "fact": "implementation-model-envelope-search-state",
+      "authority": "controller-authority",
+      "identity": "canonical campaign-state hash",
+      "lifetime": "one campaign lineage",
+      "reset": "source, envelope, evidence, generator, or evaluator change"
+    },
+    {
+      "id": "semantic-model",
+      "subject": "intent",
+      "label": "Evidence-bound whole-system semantic model",
+      "kind": "carrier",
+      "fact": "typed semantic and realization model",
+      "authority": "model-authority",
+      "identity": "canonical model hash",
+      "lifetime": "one implementation revision",
+      "reset": "every accepted implementation change"
+    },
+    {
+      "id": "generator-registry",
+      "subject": "intent",
+      "label": "Typed transformation generator registry",
+      "kind": "carrier",
+      "fact": "admitted transformation families and versions",
+      "authority": "generator-authority",
+      "identity": "content-addressed registry",
+      "lifetime": "cross-project",
+      "reset": "admit, demote, or retire a generator"
+    },
+    {
+      "id": "metric-ledger",
+      "subject": "intent",
+      "label": "Dimensioned predicted and measured objective ledger",
+      "kind": "carrier",
+      "fact": "current-best-lower-bound and measured deltas",
+      "authority": "evidence-authority",
+      "identity": "campaign state plus measurement receipts",
+      "lifetime": "campaign lineage",
+      "reset": "metric definition or measurement identity change"
+    },
+    {
+      "id": "repository-state",
+      "subject": "intent",
+      "label": "Current implementation or generated system",
+      "kind": "carrier",
+      "fact": "implementation subject identity",
+      "authority": "implementation-authority",
+      "identity": "source, build, and dirty-state identity",
+      "lifetime": "one accepted revision",
+      "reset": "accepted transformation or explicit rollback"
+    },
+    {
+      "id": "candidate-frontier",
+      "subject": "intent",
+      "label": "Current represented-feasible Pareto frontier",
+      "kind": "derived_view",
+      "source": "campaign-state",
+      "validity": "all candidates bind to the current model, envelope, registry, and evaluator",
+      "invalidated_by": ["accept-change", "rebuild-model", "reopen-campaign"]
+    },
+
+    {
+      "id": "purpose-authority",
+      "subject": "intent",
+      "label": "Purpose authority",
+      "kind": "authority",
+      "protocol": "single_writer",
+      "writers": ["operator"]
+    },
+    {
+      "id": "controller-authority",
+      "subject": "intent",
+      "label": "Campaign-state authority",
+      "kind": "authority",
+      "protocol": "single_writer",
+      "writers": ["controller"]
+    },
+    {
+      "id": "model-authority",
+      "subject": "intent",
+      "label": "Semantic-model authority",
+      "kind": "authority",
+      "protocol": "single_writer",
+      "writers": ["model-rebuilder"]
+    },
+    {
+      "id": "generator-authority",
+      "subject": "intent",
+      "label": "Generator-admission authority",
+      "kind": "authority",
+      "protocol": "single_writer",
+      "writers": ["generator-admission"]
+    },
+    {
+      "id": "evidence-authority",
+      "subject": "intent",
+      "label": "Metric and acceptance evidence authority",
+      "kind": "authority",
+      "protocol": "single_writer",
+      "writers": ["verifier"]
+    },
+    {
+      "id": "implementation-authority",
+      "subject": "intent",
+      "label": "Candidate implementation authority",
+      "kind": "authority",
+      "protocol": "single_writer",
+      "writers": ["executor"]
+    },
+
+    {"id": "operator", "subject": "intent", "label": "Purpose and policy operator", "kind": "actor", "actor_kind": "human decision authority"},
+    {"id": "controller", "subject": "intent", "label": "Closed-loop campaign controller", "kind": "actor", "actor_kind": "deterministic scheduler"},
+    {"id": "model-rebuilder", "subject": "intent", "label": "Independent model rebuilder", "kind": "actor", "actor_kind": "evidence-bound extractor and compiler"},
+    {"id": "candidate-generator", "subject": "intent", "label": "Transformation candidate generator", "kind": "actor", "actor_kind": "typed matcher and proposer"},
+    {"id": "generator-admission", "subject": "intent", "label": "Generator admission boundary", "kind": "actor", "actor_kind": "evidence-gated registry maintainer"},
+    {"id": "executor", "subject": "intent", "label": "Isolated implementation executor", "kind": "actor", "actor_kind": "code and design transformer"},
+    {"id": "verifier", "subject": "intent", "label": "Independent verification and measurement boundary", "kind": "actor", "actor_kind": "translation validator and metric evaluator"},
+
+    {"id": "recover-model", "subject": "intent", "label": "Construct or recover the semantic model", "kind": "transition"},
+    {"id": "generate-candidates", "subject": "intent", "label": "Match generators across the whole system", "kind": "transition"},
+    {"id": "apply-candidate", "subject": "intent", "label": "Materialize a candidate in isolation", "kind": "transition"},
+    {"id": "verify-candidate", "subject": "intent", "label": "Challenge protected behavior and declared semantic delta", "kind": "transition"},
+    {"id": "measure-candidate", "subject": "intent", "label": "Measure declared objective coordinates", "kind": "transition"},
+    {"id": "accept-change", "subject": "intent", "label": "Accept one proof-carrying measured improvement", "kind": "transition"},
+    {"id": "reject-change", "subject": "intent", "label": "Reject and retain a counterexample", "kind": "transition"},
+    {"id": "rebuild-model", "subject": "intent", "label": "Reconstruct the whole model after a change", "kind": "transition"},
+    {"id": "confirm-sweep", "subject": "intent", "label": "Complete and confirm an unchanged whole-system sweep", "kind": "transition"},
+    {"id": "reopen-campaign", "subject": "intent", "label": "Reopen after a relevant identity or evidence change", "kind": "transition"},
+
+    {"id": "obs-generated-system", "subject": "intent", "label": "Generated implementation and acceptance harness", "kind": "observation"},
+    {"id": "obs-candidate-frontier", "subject": "intent", "label": "Automatically generated candidate frontier", "kind": "observation"},
+    {"id": "obs-protected-behavior", "subject": "intent", "label": "Protected behavioral evidence and negative controls", "kind": "observation"},
+    {"id": "obs-measured-delta", "subject": "intent", "label": "Predicted versus measured dimensioned delta", "kind": "observation"},
+    {"id": "obs-model-identity", "subject": "intent", "label": "Rebuilt semantic-model identity", "kind": "observation"},
+    {"id": "obs-campaign-status", "subject": "intent", "label": "Computed campaign status and coverage", "kind": "observation"},
+    {"id": "obs-transfer-error", "subject": "intent", "label": "Cross-project generator prediction error", "kind": "observation"},
+
+    {"id": "contract-purpose-envelope", "subject": "intent", "label": "Purpose and environment contract", "kind": "contract", "contract_kind": "schema"},
+    {"id": "contract-candidate", "subject": "intent", "label": "Transformation candidate contract", "kind": "contract", "contract_kind": "schema"},
+    {"id": "contract-acceptance", "subject": "intent", "label": "Protected behavior and Pareto acceptance contract", "kind": "contract", "contract_kind": "consistency"},
+    {"id": "contract-stopping", "subject": "intent", "label": "Computed stationarity and reopening contract", "kind": "contract", "contract_kind": "failure"},
+    {
+      "id": "accepted-change-effect",
+      "subject": "intent",
+      "label": "Accepted implementation improvement",
+      "kind": "effect",
+      "intent_carrier": "repository-state",
+      "receipt_observation": "obs-measured-delta",
+      "reconciliation_transition": "rebuild-model"
+    },
+    {"id": "resource-budget", "subject": "intent", "label": "Declared search and implementation budget", "kind": "resource", "resource_kind": "bounded compute and engineering effort"},
+    {"id": "resource-target", "subject": "intent", "label": "Existing repository or greenfield output root", "kind": "resource", "resource_kind": "versioned system subject"},
+
+    {"id": "impl-model", "subject": "current-tooling", "label": "Existing semantic model compiler", "kind": "implementation", "locator": "skills/semantic-architecture/src/semantic.rs"},
+    {"id": "impl-convergence", "subject": "current-tooling", "label": "Existing pure stopping predicate", "kind": "implementation", "locator": "skills/semantic-architecture/src/converge.rs"},
+    {"id": "impl-seam", "subject": "current-tooling", "label": "Existing seam topology evaluator", "kind": "implementation", "locator": "skills/optimize-program-seam-topology/scripts/fold_graph.py"},
+    {"id": "impl-kerf", "subject": "current-tooling", "label": "Existing finite behavioral kernel", "kind": "implementation", "locator": "skills/behavioral-factorization/src"}
+  ],
+  "relations": [
+    {"id": "req-unified-observation", "kind": "requires_observation", "tails": ["req-unified-modes"], "heads": ["obs-generated-system", "obs-model-identity"]},
+    {"id": "req-unified-realization", "kind": "realized_by", "tails": ["req-unified-modes"], "heads": ["purpose-envelope", "campaign-state", "recover-model", "contract-purpose-envelope"]},
+    {"id": "req-improvement-observation", "kind": "requires_observation", "tails": ["req-real-improvement"], "heads": ["obs-candidate-frontier", "obs-measured-delta"]},
+    {"id": "req-improvement-realization", "kind": "realized_by", "tails": ["req-real-improvement"], "heads": ["generator-registry", "apply-candidate", "accept-change", "accepted-change-effect"]},
+    {"id": "req-preservation-observation", "kind": "requires_observation", "tails": ["req-preserve-purpose"], "heads": ["obs-protected-behavior"]},
+    {"id": "req-preservation-realization", "kind": "realized_by", "tails": ["req-preserve-purpose"], "heads": ["verify-candidate", "contract-acceptance"]},
+    {"id": "req-metrics-observation", "kind": "requires_observation", "tails": ["req-all-metrics"], "heads": ["obs-measured-delta", "obs-candidate-frontier"]},
+    {"id": "req-metrics-realization", "kind": "realized_by", "tails": ["req-all-metrics"], "heads": ["metric-ledger", "candidate-frontier", "measure-candidate"]},
+    {"id": "req-stop-observation", "kind": "requires_observation", "tails": ["req-computed-stop"], "heads": ["obs-campaign-status", "obs-model-identity"]},
+    {"id": "req-stop-realization", "kind": "realized_by", "tails": ["req-computed-stop"], "heads": ["campaign-state", "confirm-sweep", "reopen-campaign", "contract-stopping"]},
+    {"id": "req-accretion-observation", "kind": "requires_observation", "tails": ["req-accretion"], "heads": ["obs-transfer-error", "obs-measured-delta"]},
+    {"id": "req-accretion-realization", "kind": "realized_by", "tails": ["req-accretion"], "heads": ["generator-registry", "contract-candidate"]},
+
+    {"id": "operator-writes-purpose", "kind": "writes", "tails": ["operator"], "heads": ["purpose-envelope"]},
+    {"id": "controller-writes-state", "kind": "writes", "tails": ["controller"], "heads": ["campaign-state"]},
+    {"id": "rebuilder-writes-model", "kind": "writes", "tails": ["model-rebuilder"], "heads": ["semantic-model"]},
+    {"id": "admission-writes-registry", "kind": "writes", "tails": ["generator-admission"], "heads": ["generator-registry"]},
+    {"id": "verifier-writes-ledger", "kind": "writes", "tails": ["verifier"], "heads": ["metric-ledger"]},
+    {"id": "executor-writes-repository", "kind": "writes", "tails": ["executor"], "heads": ["repository-state"]},
+    {"id": "frontier-derived-from-state", "kind": "derives_from", "tails": ["candidate-frontier"], "heads": ["campaign-state", "metric-ledger"]},
+    {"id": "accept-invalidates-frontier", "kind": "invalidates", "tails": ["accept-change"], "heads": ["candidate-frontier"]},
+    {"id": "rebuild-invalidates-frontier", "kind": "invalidates", "tails": ["rebuild-model"], "heads": ["candidate-frontier"]},
+    {"id": "reopen-invalidates-frontier", "kind": "invalidates", "tails": ["reopen-campaign"], "heads": ["candidate-frontier"]},
+
+    {"id": "recover-emits-model", "kind": "emits", "tails": ["recover-model"], "heads": ["obs-model-identity"]},
+    {"id": "generate-emits-frontier", "kind": "emits", "tails": ["generate-candidates"], "heads": ["obs-candidate-frontier"]},
+    {"id": "verify-emits-behavior", "kind": "emits", "tails": ["verify-candidate"], "heads": ["obs-protected-behavior"]},
+    {"id": "measure-emits-delta", "kind": "emits", "tails": ["measure-candidate"], "heads": ["obs-measured-delta"]},
+    {"id": "accept-emits-effect", "kind": "emits", "tails": ["accept-change"], "heads": ["accepted-change-effect"]},
+    {"id": "confirm-emits-status", "kind": "emits", "tails": ["confirm-sweep"], "heads": ["obs-campaign-status"]},
+    {"id": "rebuild-before-confirm", "kind": "happens_before", "tails": ["rebuild-model"], "heads": ["confirm-sweep"]},
+    {"id": "verify-before-accept", "kind": "happens_before", "tails": ["verify-candidate", "measure-candidate"], "heads": ["accept-change"]},
+    {"id": "accept-before-rebuild", "kind": "happens_before", "tails": ["accept-change"], "heads": ["rebuild-model"]},
+
+    {"id": "current-model-implements", "kind": "implements", "tails": ["impl-model"], "heads": ["semantic-model", "recover-model"]},
+    {"id": "current-convergence-implements", "kind": "implements", "tails": ["impl-convergence"], "heads": ["confirm-sweep", "contract-stopping"]},
+    {"id": "current-seam-implements", "kind": "implements", "tails": ["impl-seam"], "heads": ["candidate-frontier", "measure-candidate"]},
+    {"id": "current-kerf-implements", "kind": "implements", "tails": ["impl-kerf"], "heads": ["verify-candidate", "contract-acceptance"]}
+  ],
+  "bindings": [
+    {
+      "id": "binding-operator-goal",
+      "subject": "intent",
+      "kind": "manual_assertion",
+      "artifact_sha256": "650c5255074f20c7dc02d2cadb362e942aee3b3c2f3d9abc867945f56857b248",
+      "locator": "/home/oliver/Pictures/parag.txt"
+    },
+    {
+      "id": "binding-current-skill",
+      "subject": "current-tooling",
+      "kind": "source_artifact",
+      "artifact_sha256": "adec4a8468d362ac006dfe202748d7e11a4a0e5a27a51d3efbc80a373793f589",
+      "locator": "skills/semantic-architecture/SKILL.md",
+      "revision": "2900c16c700a4014de1966d899b871ed73317f45"
+    },
+    {
+      "id": "binding-current-convergence",
+      "subject": "current-tooling",
+      "kind": "source_artifact",
+      "artifact_sha256": "9580d98829015a391daaa1bdcfe6958483f9dfa0d989aded57f0fc24ced11f34",
+      "locator": "skills/semantic-architecture/src/converge.rs",
+      "revision": "2900c16c700a4014de1966d899b871ed73317f45"
+    },
+    {
+      "id": "binding-campaign-reference",
+      "subject": "current-tooling",
+      "kind": "source_artifact",
+      "artifact_sha256": "a8fb14add870e58440ae7039209918b9c4cd016b4bcbf5ac5dfff622d2e63641",
+      "locator": "skills/semantic-architecture/references/convergent-campaigns.md",
+      "revision": "2900c16c700a4014de1966d899b871ed73317f45"
+    },
+    {
+      "id": "binding-dispersion-pilot",
+      "subject": "current-tooling",
+      "kind": "source_artifact",
+      "artifact_sha256": "bb6d5563a797866c8c5cf63524ad7f95b8c430878d224faa0ce3f7af083eb9b5",
+      "locator": "skills/semantic-architecture/references/dispersion-pilot-accretion.md",
+      "revision": "2900c16c700a4014de1966d899b871ed73317f45"
+    },
+    {
+      "id": "binding-powerbi-pilot",
+      "subject": "current-tooling",
+      "kind": "source_artifact",
+      "artifact_sha256": "b517f4607563e56d6f0c0e9ce9d9e9305ad121f45cfcb9bf3019979ce2168162",
+      "locator": "skills/semantic-architecture/references/powerbi-resolver-pilot-accretion.md",
+      "revision": "2900c16c700a4014de1966d899b871ed73317f45"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-operator-goal",
+      "subject": "intent",
+      "binding": "binding-operator-goal",
+      "kind": "specification",
+      "acquisition": "declared",
+      "sha256": "650c5255074f20c7dc02d2cadb362e942aee3b3c2f3d9abc867945f56857b248",
+      "source": "/home/oliver/Pictures/parag.txt",
+      "coverage": {
+        "contexts": ["greenfield", "brownfield", "self-host"],
+        "limitations": ["operator intent is authoritative for purpose but is not implementation evidence"]
+      }
+    },
+    {
+      "id": "ev-current-skill",
+      "subject": "current-tooling",
+      "binding": "binding-current-skill",
+      "kind": "source",
+      "acquisition": "observed",
+      "sha256": "adec4a8468d362ac006dfe202748d7e11a4a0e5a27a51d3efbc80a373793f589",
+      "source": "skills/semantic-architecture/SKILL.md",
+      "revision": "2900c16c700a4014de1966d899b871ed73317f45",
+      "coverage": {"limitations": ["manual source inspection; not executed controller evidence"]}
+    },
+    {
+      "id": "ev-current-convergence",
+      "subject": "current-tooling",
+      "binding": "binding-current-convergence",
+      "kind": "source",
+      "acquisition": "observed",
+      "sha256": "9580d98829015a391daaa1bdcfe6958483f9dfa0d989aded57f0fc24ced11f34",
+      "source": "skills/semantic-architecture/src/converge.rs",
+      "revision": "2900c16c700a4014de1966d899b871ed73317f45",
+      "coverage": {"limitations": ["source proves the current input shape, not scheduler execution"]}
+    },
+    {
+      "id": "ev-campaign-reference",
+      "subject": "current-tooling",
+      "binding": "binding-campaign-reference",
+      "kind": "specification",
+      "acquisition": "declared",
+      "sha256": "a8fb14add870e58440ae7039209918b9c4cd016b4bcbf5ac5dfff622d2e63641",
+      "source": "skills/semantic-architecture/references/convergent-campaigns.md",
+      "revision": "2900c16c700a4014de1966d899b871ed73317f45",
+      "coverage": {"limitations": ["design reference; executable coverage is represented separately"]}
+    },
+    {
+      "id": "ev-dispersion-pilot",
+      "subject": "current-tooling",
+      "binding": "binding-dispersion-pilot",
+      "kind": "history",
+      "acquisition": "declared",
+      "sha256": "bb6d5563a797866c8c5cf63524ad7f95b8c430878d224faa0ce3f7af083eb9b5",
+      "source": "skills/semantic-architecture/references/dispersion-pilot-accretion.md",
+      "revision": "2900c16c700a4014de1966d899b871ed73317f45",
+      "coverage": {"workloads": ["dispersion"], "limitations": ["project reference is a transport prior, not fresh runtime proof"]}
+    },
+    {
+      "id": "ev-powerbi-pilot",
+      "subject": "current-tooling",
+      "binding": "binding-powerbi-pilot",
+      "kind": "history",
+      "acquisition": "declared",
+      "sha256": "b517f4607563e56d6f0c0e9ce9d9e9305ad121f45cfcb9bf3019979ce2168162",
+      "source": "skills/semantic-architecture/references/powerbi-resolver-pilot-accretion.md",
+      "revision": "2900c16c700a4014de1966d899b871ed73317f45",
+      "coverage": {"workloads": ["powerbi-cli"], "limitations": ["project reference is a transport prior, not fresh runtime proof"]}
+    }
+  ],
+  "closures": [
+    {
+      "id": "closure-declared-goal",
+      "subject": "intent",
+      "scope": "optimizer-purpose",
+      "domain": "requirements explicitly declared in the supplied project narrative",
+      "kind": "complete_for_declared_corpus",
+      "evidence": ["ev-operator-goal"]
+    },
+    {
+      "id": "closure-current-tooling",
+      "subject": "current-tooling",
+      "scope": "current-tooling-scope",
+      "domain": "selected current skill and convergence source artifacts",
+      "kind": "observed_only",
+      "evidence": ["ev-current-skill", "ev-current-convergence"]
+    },
+    {
+      "id": "closure-controller-projection",
+      "subject": "intent",
+      "scope": "controller-projection",
+      "domain": "states and actions in the declared finite optimization lifecycle",
+      "kind": "exhaustive_finite",
+      "evidence": ["ev-operator-goal"]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-unified-modes",
+      "subject": "intent",
+      "scope": "optimizer-purpose",
+      "kind": "requirement_satisfied",
+      "statement": "The same campaign machinery constructs greenfield systems and improves brownfield systems",
+      "epistemic_class": "evidence_inference",
+      "verdict": "unknown",
+      "subjects": ["req-unified-modes", "campaign-state", "purpose-envelope"],
+      "support": ["ev-operator-goal"],
+      "nonclaims": ["a shared schema does not yet demonstrate successful construction or optimization"]
+    },
+    {
+      "id": "claim-real-improvement",
+      "subject": "intent",
+      "scope": "optimizer-purpose",
+      "kind": "requirement_satisfied",
+      "statement": "One invocation repeatedly lands verified nontrivial improvements rather than only findings",
+      "epistemic_class": "heuristic",
+      "verdict": "unknown",
+      "subjects": ["req-real-improvement", "accept-change", "accepted-change-effect"],
+      "support": ["ev-operator-goal"],
+      "nonclaims": ["prior project improvements do not establish that the new controller can discover and apply repeated changes"]
+    },
+    {
+      "id": "claim-preserve-purpose",
+      "subject": "intent",
+      "scope": "optimizer-purpose",
+      "kind": "requirement_satisfied",
+      "statement": "Every accepted change preserves hard constraints and protected observations",
+      "epistemic_class": "bounded_check",
+      "verdict": "unknown",
+      "subjects": ["req-preserve-purpose", "verify-candidate", "contract-acceptance"],
+      "support": ["ev-operator-goal"],
+      "nonclaims": ["validation can cover only declared observations and evidence identities"]
+    },
+    {
+      "id": "claim-all-metrics",
+      "subject": "intent",
+      "scope": "optimizer-purpose",
+      "kind": "requirement_satisfied",
+      "statement": "The campaign revisits every declared dimension and retains incomparable alternatives",
+      "epistemic_class": "evidence_inference",
+      "verdict": "unknown",
+      "subjects": ["req-all-metrics", "metric-ledger", "candidate-frontier"],
+      "support": ["ev-operator-goal"],
+      "nonclaims": ["no universal scalar simplicity or elegance metric is claimed"]
+    },
+    {
+      "id": "claim-computed-stop",
+      "subject": "intent",
+      "scope": "optimizer-purpose",
+      "kind": "invariant",
+      "statement": "Stationarity requires computed generator coverage and a second unchanged complete sweep",
+      "epistemic_class": "evidence_inference",
+      "verdict": "unknown",
+      "subjects": ["req-computed-stop", "campaign-state", "confirm-sweep", "reopen-campaign"],
+      "support": ["ev-operator-goal"],
+      "nonclaims": ["finite controller validity does not prove that a real scheduler exhausts an unrestricted transformation space"]
+    },
+    {
+      "id": "claim-accretion",
+      "subject": "intent",
+      "scope": "optimizer-purpose",
+      "kind": "requirement_satisfied",
+      "statement": "Measured prediction error and verified outcomes admit, demote, or retire reusable mechanisms",
+      "epistemic_class": "heuristic",
+      "verdict": "unknown",
+      "subjects": ["req-accretion", "generator-registry", "generator-admission"],
+      "support": ["ev-operator-goal"],
+      "nonclaims": ["finding counts and model agreement are not accretive evidence"]
+    },
+    {
+      "id": "claim-current-gap",
+      "subject": "current-tooling",
+      "scope": "current-tooling-scope",
+      "kind": "source_correspondence",
+      "statement": "The current convergence evaluator consumes caller-declared exhaustion and is a predicate rather than a scheduler",
+      "epistemic_class": "evidence_inference",
+      "verdict": "supported",
+      "subjects": ["impl-convergence"],
+      "support": ["ev-current-convergence", "ev-current-skill"],
+      "nonclaims": ["this source observation does not establish the correctness of the proposed replacement"]
+    },
+    {
+      "id": "claim-controller-lifecycle",
+      "subject": "intent",
+      "scope": "controller-projection",
+      "kind": "invariant",
+      "statement": "A candidate must be accepted and the model rebuilt before confirmation can reach stationarity",
+      "epistemic_class": "evidence_inference",
+      "verdict": "unknown",
+      "subjects": ["campaign-state", "confirm-sweep"],
+      "support": ["ev-operator-goal"],
+      "nonclaims": ["finite lifecycle validation does not prove actual generator coverage"]
+    }
+  ],
+  "work_items": [
+    {
+      "id": "work-state",
+      "intent": "Implement the unified living campaign state and computed frontier",
+      "changes": ["campaign-state", "purpose-envelope", "metric-ledger", "contract-stopping"],
+      "satisfies": ["req-unified-modes", "req-computed-stop", "req-all-metrics"],
+      "evidence_gates": ["claim-unified-modes", "claim-computed-stop", "claim-all-metrics"],
+      "external_binding": "sae-1xs.1"
+    },
+    {
+      "id": "work-generators",
+      "intent": "Generate proof-carrying whole-system transformations without a named seam",
+      "changes": ["generator-registry", "candidate-generator", "generate-candidates", "contract-candidate"],
+      "satisfies": ["req-real-improvement"],
+      "depends_on": ["work-state"],
+      "evidence_gates": ["claim-real-improvement"],
+      "external_binding": "sae-1xs.2"
+    },
+    {
+      "id": "work-executor",
+      "intent": "Apply verify measure and rebuild after every candidate",
+      "changes": ["executor", "verifier", "apply-candidate", "verify-candidate", "measure-candidate", "rebuild-model"],
+      "satisfies": ["req-real-improvement", "req-preserve-purpose"],
+      "depends_on": ["work-generators"],
+      "evidence_gates": ["claim-real-improvement", "claim-preserve-purpose"],
+      "external_binding": "sae-1xs.3"
+    },
+    {
+      "id": "work-two-move-pilot",
+      "intent": "Demonstrate two sequential nontrivial real-code improvements without model re-authoring",
+      "changes": ["accepted-change-effect", "repository-state", "semantic-model"],
+      "satisfies": ["req-real-improvement", "req-computed-stop"],
+      "depends_on": ["work-executor"],
+      "evidence_gates": ["claim-real-improvement", "claim-computed-stop"],
+      "external_binding": "sae-1xs.4"
+    },
+    {
+      "id": "work-search-escape",
+      "intent": "Escape single-move fixed points and test held-out environmental changes",
+      "changes": ["candidate-frontier", "generator-registry", "resource-budget"],
+      "satisfies": ["req-all-metrics"],
+      "depends_on": ["work-two-move-pilot"],
+      "evidence_gates": ["claim-all-metrics"],
+      "external_binding": "sae-1xs.5"
+    },
+    {
+      "id": "work-self-host",
+      "intent": "Construct the optimizer greenfield and improve its own repository brownfield",
+      "changes": ["obs-generated-system", "resource-target", "repository-state"],
+      "satisfies": ["req-unified-modes", "req-real-improvement"],
+      "depends_on": ["work-two-move-pilot"],
+      "evidence_gates": ["claim-unified-modes", "claim-real-improvement"],
+      "external_binding": "sae-1xs.8"
+    },
+    {
+      "id": "work-skill-accretion",
+      "intent": "Accrete only validated mechanisms into the canonical skills",
+      "changes": ["generator-registry", "generator-admission", "obs-transfer-error"],
+      "satisfies": ["req-accretion"],
+      "depends_on": ["work-self-host"],
+      "evidence_gates": ["claim-accretion"],
+      "external_binding": "sae-1xs.6"
+    },
+    {
+      "id": "work-cross-project",
+      "intent": "Demonstrate cross-project transfer and improve the admission loop",
+      "changes": ["generator-registry", "obs-transfer-error"],
+      "satisfies": ["req-accretion"],
+      "depends_on": ["work-search-escape", "work-skill-accretion"],
+      "evidence_gates": ["claim-accretion"],
+      "external_binding": "sae-1xs.7"
+    }
+  ],
+  "projections": [
+    {
+      "id": "controller-lifecycle-lts",
+      "subject": "intent",
+      "scope": "controller-projection",
+      "operation": "validate-lts",
+      "lowering_version": "semantic-evolution-controller-v1",
+      "target_input": {
+        "schema_version": "kerf.lts.v1",
+        "machine": {
+          "initial": "open",
+          "actions": ["discover", "accept", "reject", "rebuild", "complete_sweep", "reopen", "budget_expire"],
+          "states": [
+            {
+              "id": "open",
+              "observation": "open",
+              "transitions": {
+                "discover": {"to": "candidate", "emission": "candidate_found"},
+                "accept": {"to": "open", "emission": "invalid_accept"},
+                "reject": {"to": "open", "emission": "no_candidate"},
+                "rebuild": {"to": "open", "emission": "already_current"},
+                "complete_sweep": {"to": "confirming", "emission": "confirmation_required"},
+                "reopen": {"to": "open", "emission": "already_open"},
+                "budget_expire": {"to": "budget_exhausted", "emission": "budget_exhausted"}
+              }
+            },
+            {
+              "id": "candidate",
+              "observation": "candidate_open",
+              "transitions": {
+                "discover": {"to": "candidate", "emission": "candidate_open"},
+                "accept": {"to": "rebuilding", "emission": "change_accepted"},
+                "reject": {"to": "open", "emission": "counterexample_retained"},
+                "rebuild": {"to": "candidate", "emission": "candidate_unresolved"},
+                "complete_sweep": {"to": "candidate", "emission": "candidate_unresolved"},
+                "reopen": {"to": "open", "emission": "candidate_invalidated"},
+                "budget_expire": {"to": "budget_exhausted", "emission": "budget_exhausted"}
+              }
+            },
+            {
+              "id": "rebuilding",
+              "observation": "model_stale",
+              "transitions": {
+                "discover": {"to": "rebuilding", "emission": "model_stale"},
+                "accept": {"to": "rebuilding", "emission": "model_stale"},
+                "reject": {"to": "rebuilding", "emission": "model_stale"},
+                "rebuild": {"to": "open", "emission": "model_rebuilt"},
+                "complete_sweep": {"to": "rebuilding", "emission": "model_stale"},
+                "reopen": {"to": "rebuilding", "emission": "model_stale"},
+                "budget_expire": {"to": "budget_exhausted", "emission": "budget_exhausted"}
+              }
+            },
+            {
+              "id": "confirming",
+              "observation": "confirmation_required",
+              "transitions": {
+                "discover": {"to": "candidate", "emission": "candidate_found"},
+                "accept": {"to": "confirming", "emission": "invalid_accept"},
+                "reject": {"to": "open", "emission": "state_changed"},
+                "rebuild": {"to": "open", "emission": "state_changed"},
+                "complete_sweep": {"to": "stationary", "emission": "envelope_stationary"},
+                "reopen": {"to": "open", "emission": "reopened"},
+                "budget_expire": {"to": "budget_exhausted", "emission": "budget_exhausted"}
+              }
+            },
+            {
+              "id": "stationary",
+              "observation": "envelope_stationary",
+              "transitions": {
+                "discover": {"to": "candidate", "emission": "new_generator_or_evidence"},
+                "accept": {"to": "stationary", "emission": "invalid_accept"},
+                "reject": {"to": "stationary", "emission": "no_change"},
+                "rebuild": {"to": "open", "emission": "source_changed"},
+                "complete_sweep": {"to": "stationary", "emission": "still_stationary"},
+                "reopen": {"to": "open", "emission": "reopened"},
+                "budget_expire": {"to": "budget_exhausted", "emission": "budget_exhausted"}
+              }
+            },
+            {
+              "id": "budget_exhausted",
+              "observation": "budget_exhausted_with_unknowns",
+              "transitions": {
+                "discover": {"to": "budget_exhausted", "emission": "budget_exhausted"},
+                "accept": {"to": "budget_exhausted", "emission": "budget_exhausted"},
+                "reject": {"to": "budget_exhausted", "emission": "budget_exhausted"},
+                "rebuild": {"to": "budget_exhausted", "emission": "budget_exhausted"},
+                "complete_sweep": {"to": "budget_exhausted", "emission": "budget_exhausted"},
+                "reopen": {"to": "open", "emission": "budget_widened"},
+                "budget_expire": {"to": "budget_exhausted", "emission": "budget_exhausted"}
+              }
+            }
+          ]
+        },
+        "context": {
+          "initial": "declared-envelope",
+          "states": [
+            {
+              "id": "declared-envelope",
+              "transitions": {
+                "discover": "declared-envelope",
+                "accept": "declared-envelope",
+                "reject": "declared-envelope",
+                "rebuild": "declared-envelope",
+                "complete_sweep": "declared-envelope",
+                "reopen": "declared-envelope",
+                "budget_expire": "declared-envelope"
+              }
+            }
+          ]
+        }
+      },
+      "scope_entities": ["campaign-state", "controller", "confirm-sweep", "obs-campaign-status"],
+      "entity_map": [
+        {"source": "campaign-state", "target_pointer": "/machine/states"},
+        {"source": "confirm-sweep", "target_pointer": "/machine/states/0/transitions/complete_sweep"},
+        {"source": "obs-campaign-status", "target_pointer": "/machine/states/0/observation"}
+      ],
+      "relation_map": [
+        {"source": "controller-writes-state", "target_pointer": "/machine/states/0/transitions"},
+        {"source": "confirm-emits-status", "target_pointer": "/machine/states/0/transitions/complete_sweep/emission"}
+      ],
+      "omitted_entities": [
+        {"id": "controller", "reason": "scheduler identity remains in the semantic manifest outside the finite transition system"}
+      ],
+      "omitted_relations": [
+        {"id": "req-unified-realization", "reason": "greenfield and brownfield subject routing is outside the controller LTS"},
+        {"id": "req-stop-observation", "reason": "acceptance traceability is retained in the semantic model"},
+        {"id": "req-stop-realization", "reason": "stopping contract traceability is retained in the semantic model"},
+        {"id": "frontier-derived-from-state", "reason": "Pareto frontier derivation is evaluated by the campaign state, outside the lifecycle LTS"},
+        {"id": "rebuild-before-confirm", "reason": "the finite state encodes the ordering but not the semantic relation identity"},
+        {"id": "current-convergence-implements", "reason": "the current candidate binding is outside the intent-only finite LTS"}
+      ],
+      "claim_ids": ["claim-controller-lifecycle"],
+      "evidence_ids": ["ev-operator-goal"],
+      "closure_ids": ["closure-controller-projection"],
+      "assumptions": ["claim-computed-stop", "claim-unified-modes"],
+      "source_claim_ceiling": "evidence_inference"
+    }
+  ]
+}

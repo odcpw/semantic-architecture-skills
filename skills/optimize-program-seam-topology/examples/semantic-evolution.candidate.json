@@ -1,0 +1,49 @@
+{
+  "schema_version": 3,
+  "id": "semantic-evolution-kernel-layout-v1",
+  "subject_identity": "semantic-evolution-greenfield-v1",
+  "assignments": {
+    "purpose_envelope": "cycle",
+    "campaign_state": "cycle",
+    "controller": "cycle",
+    "semantic_model": "model",
+    "model_rebuilder": "model",
+    "generator_registry": "generators",
+    "candidate_matcher": "cycle",
+    "seam_kernel": "generators",
+    "executor": "execution",
+    "isomorphic_backend": "execution",
+    "verifier": "evidence",
+    "metric_ledger": "evidence",
+    "finite_kernel": "evidence",
+    "skill_feedback": "feedback"
+  },
+  "replacements": {},
+  "evidence": {
+    "controller-lifecycle": {
+      "semantic_constraint_id": "controller-lifecycle",
+      "subject_identity": "semantic-evolution-greenfield-v1",
+      "candidate_semantics_sha256": "4e5a66b252f25cef356dea050aa89f15a8a8b80c97c889d38b0c9b520ebcc5bf",
+      "kind": "checked_certificate",
+      "claim_id": "claim-controller-lifecycle",
+      "closure": "exhaustive_finite",
+      "status": "accepted",
+      "plan_sha256": "8e9cfd998d167d80987080f55b575d4161c5bad9d7632cf15d9c3e76bcd1a76e",
+      "receipt_sha256": "ed5ebfc3c800968476f99ceb99c664c7c2ba8078508d84c722e3b5d49f1b2f79",
+      "evaluator_sha256": "43b447d524460b82e37039e3b76f9822f675dd404e117ffd0074ad777f1029c9",
+      "skill_sha256": "55a83dc181bc05cf33ac5eea68aebb203f6887d9f4fd5c0445c30cf2b07df9e6",
+      "procedure_manifest_sha256": "8e9cfd998d167d80987080f55b575d4161c5bad9d7632cf15d9c3e76bcd1a76e",
+      "commands": [
+        "kerf-model project semantic-evolution.model.json controller-lifecycle-lts | kerf validate-lts /dev/stdin"
+      ],
+      "artifacts": [
+        "skills/semantic-architecture/examples/semantic-evolution.model.json",
+        "skills/semantic-architecture/examples/controller-lifecycle.kerf-receipt.json"
+      ]
+    }
+  },
+  "adapters": [],
+  "nonclaims": [
+    "the cycle and centralized candidate-matching slice is implemented; the remaining modules are still a greenfield boundary proposal"
+  ]
+}

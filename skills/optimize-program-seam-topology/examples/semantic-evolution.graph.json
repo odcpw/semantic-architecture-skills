@@ -1,0 +1,77 @@
+{
+  "schema_version": 3,
+  "decision": {
+    "id": "semantic-evolution-kernel-boundaries",
+    "consumer": "sae-1xs.1 living optimizer implementation",
+    "retirement_condition": "one implementable controller boundary model with protected lifecycle evidence and no duplicate authority",
+    "source_identity": {
+      "kind": "content_manifest",
+      "repository": "semantic-architecture-skills",
+      "revision": "semantic-evolution-self-host-v1",
+      "tree_sha256": "8e9cfd998d167d80987080f55b575d4161c5bad9d7632cf15d9c3e76bcd1a76e",
+      "working_tree_state": "not_applicable",
+      "dirty_patch_sha256": null
+    },
+    "protected_observations": [
+      {
+        "id": "controller-lifecycle",
+        "manifest_sha256": "b82513941a81a47ec5b0b50920572a4350d83886a148cd0f009c5b368a69d622"
+      }
+    ],
+    "selection_rule": "pareto_after_hard_feasibility",
+    "prior_decision_receipts": []
+  },
+  "change_model": "independent_bernoulli",
+  "module_overhead_bits": 8,
+  "semantic_steps": 100,
+  "vertices": [
+    {"id": "purpose_envelope", "kind": "state", "current_module": "cycle", "mutable": true, "authority_key": "purpose-envelope", "description_bits": 24, "compile_cost_ms": 4, "change_probability": 0.05, "memory_bytes": 512, "pinned_module": "cycle"},
+    {"id": "campaign_state", "kind": "state", "current_module": "cycle", "mutable": true, "authority_key": "campaign-state", "description_bits": 36, "compile_cost_ms": 8, "change_probability": 0.25, "memory_bytes": 2048},
+    {"id": "controller", "kind": "phase", "current_module": "cycle", "description_bits": 32, "compile_cost_ms": 8, "change_probability": 0.25, "memory_bytes": 512},
+    {"id": "semantic_model", "kind": "state", "current_module": "model", "mutable": true, "authority_key": "semantic-model", "description_bits": 32, "compile_cost_ms": 12, "change_probability": 0.2, "memory_bytes": 4096},
+    {"id": "model_rebuilder", "kind": "transition", "current_module": "model", "description_bits": 28, "compile_cost_ms": 12, "change_probability": 0.2, "memory_bytes": 512},
+    {"id": "generator_registry", "kind": "state", "current_module": "generators", "mutable": true, "authority_key": "generator-registry", "description_bits": 28, "compile_cost_ms": 6, "change_probability": 0.125, "memory_bytes": 1024},
+    {"id": "candidate_matcher", "kind": "transition", "current_module": "generators", "description_bits": 32, "compile_cost_ms": 10, "change_probability": 0.3333333333333333, "memory_bytes": 1024},
+    {"id": "seam_kernel", "kind": "implementation", "current_module": "generators", "description_bits": 16, "compile_cost_ms": 3, "change_probability": 0.1, "memory_bytes": 128, "pinned_module": "generators"},
+    {"id": "executor", "kind": "transition", "current_module": "execution", "description_bits": 28, "compile_cost_ms": 8, "change_probability": 0.25, "memory_bytes": 512},
+    {"id": "isomorphic_backend", "kind": "implementation", "current_module": "execution", "description_bits": 16, "compile_cost_ms": 3, "change_probability": 0.1, "memory_bytes": 128, "pinned_module": "execution"},
+    {"id": "verifier", "kind": "transition", "current_module": "evidence", "description_bits": 32, "compile_cost_ms": 10, "change_probability": 0.2, "memory_bytes": 512},
+    {"id": "metric_ledger", "kind": "state", "current_module": "evidence", "mutable": true, "authority_key": "metric-ledger", "description_bits": 28, "compile_cost_ms": 6, "change_probability": 0.2, "memory_bytes": 2048},
+    {"id": "finite_kernel", "kind": "implementation", "current_module": "evidence", "description_bits": 16, "compile_cost_ms": 3, "change_probability": 0.08333333333333333, "memory_bytes": 128, "pinned_module": "evidence"},
+    {"id": "skill_feedback", "kind": "transition", "current_module": "feedback", "description_bits": 24, "compile_cost_ms": 5, "change_probability": 0.08333333333333333, "memory_bytes": 256}
+  ],
+  "hyperedges": [
+    {"id": "controller_owns_campaign", "kind": "write", "members": ["controller", "campaign_state"], "tails": ["controller"], "heads": ["campaign_state"], "mutable": true, "ordered": true, "weight": 5, "frequency": 100, "volume": 1, "runtime_cost": 0.01, "protocol_bits": 4, "boundary_information_bits": 800, "cut_policy": "forbid", "layers": ["semantic", "authority"]},
+    {"id": "operator_envelope_to_cycle", "kind": "read_write", "members": ["purpose_envelope", "controller", "campaign_state"], "tails": ["purpose_envelope"], "heads": ["controller", "campaign_state"], "mutable": true, "ordered": true, "weight": 3, "frequency": 2, "volume": 16, "runtime_cost": 0.1, "protocol_bits": 8, "boundary_information_bits": 256, "layers": ["semantic", "contract"]},
+    {"id": "model_refresh", "kind": "read_write", "members": ["campaign_state", "model_rebuilder", "semantic_model"], "tails": ["campaign_state", "model_rebuilder"], "heads": ["semantic_model"], "mutable": true, "ordered": true, "weight": 4, "frequency": 20, "volume": 32, "runtime_cost": 0.2, "protocol_bits": 12, "boundary_information_bits": 3200, "layers": ["semantic", "source"]},
+    {"id": "candidate_generation", "kind": "read_write", "members": ["campaign_state", "semantic_model", "generator_registry", "candidate_matcher", "seam_kernel"], "tails": ["semantic_model", "generator_registry", "seam_kernel"], "heads": ["candidate_matcher", "campaign_state"], "mutable": true, "ordered": true, "weight": 3, "frequency": 50, "volume": 16, "runtime_cost": 0.25, "protocol_bits": 10, "boundary_information_bits": 6400, "layers": ["semantic", "search"]},
+    {"id": "candidate_execution", "kind": "read_write", "members": ["campaign_state", "candidate_matcher", "executor", "isomorphic_backend"], "tails": ["campaign_state", "candidate_matcher", "isomorphic_backend"], "heads": ["executor"], "mutable": true, "ordered": true, "weight": 4, "frequency": 10, "volume": 8, "runtime_cost": 0.5, "protocol_bits": 10, "boundary_information_bits": 1200, "layers": ["semantic", "migration"]},
+    {"id": "translation_validation", "kind": "sync", "members": ["executor", "verifier", "finite_kernel", "metric_ledger", "campaign_state"], "tails": ["executor", "finite_kernel"], "heads": ["verifier", "metric_ledger", "campaign_state"], "mutable": true, "ordered": true, "weight": 5, "frequency": 10, "volume": 16, "runtime_cost": 1, "protocol_bits": 14, "boundary_information_bits": 2400, "layers": ["evidence", "runtime"]},
+    {"id": "accepted_change_rebuild", "kind": "read_write", "members": ["metric_ledger", "campaign_state", "executor", "model_rebuilder", "semantic_model"], "tails": ["metric_ledger", "executor"], "heads": ["campaign_state", "model_rebuilder", "semantic_model"], "mutable": true, "ordered": true, "weight": 5, "frequency": 5, "volume": 12, "runtime_cost": 0.5, "protocol_bits": 12, "boundary_information_bits": 1600, "layers": ["semantic", "evidence", "source"]},
+    {"id": "generator_learning", "kind": "read_write", "members": ["metric_ledger", "generator_registry", "skill_feedback"], "tails": ["metric_ledger"], "heads": ["skill_feedback", "generator_registry"], "mutable": true, "ordered": true, "weight": 2, "frequency": 1, "volume": 8, "runtime_cost": 0.1, "protocol_bits": 8, "boundary_information_bits": 256, "layers": ["history", "skills"]},
+    {"id": "independent_verification_boundary", "kind": "trust", "members": ["controller", "verifier"], "cut_policy": "allow", "penalty_mode": "co_location", "weight": 10, "layers": ["evidence", "authority"]},
+    {"id": "generator_executor_edit_collision", "kind": "edit_collision", "members": ["candidate_matcher", "executor"], "weight": 2, "frequency": 4, "penalty_mode": "co_location", "layers": ["history"]}
+  ],
+  "constraints": [
+    {"id": "cycle_authority", "kind": "co_locate", "vertices": ["controller", "campaign_state", "purpose_envelope"]},
+    {"id": "model_authority", "kind": "co_locate", "vertices": ["semantic_model", "model_rebuilder"]},
+    {"id": "evidence_authority", "kind": "co_locate", "vertices": ["verifier", "metric_ledger", "finite_kernel"]},
+    {"id": "execution_backend", "kind": "co_locate", "vertices": ["executor", "isomorphic_backend"]},
+    {"id": "independent_assertion_boundary", "kind": "separate", "vertices": ["controller", "verifier"]},
+    {"id": "finite_kernel_location", "kind": "pin", "vertex": "finite_kernel", "module": "evidence"},
+    {"id": "seam_kernel_location", "kind": "pin", "vertex": "seam_kernel", "module": "generators"}
+  ],
+  "semantic_constraints": [
+    {
+      "id": "controller-lifecycle",
+      "required": true,
+      "observation": "controller-lifecycle",
+      "evidence_kind": "checked_certificate",
+      "required_closure": "exhaustive_finite"
+    }
+  ],
+  "nonclaims": [
+    "description and change-cost estimates are a fixed design comparison model, not measurements of implemented code",
+    "the graph does not prove source correspondence or whole-program optimality"
+  ]
+}
