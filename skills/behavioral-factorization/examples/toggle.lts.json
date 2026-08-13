@@ -1,0 +1,45 @@
+{
+  "schema_version": "kerf.lts.v1",
+  "machine": {
+    "initial": "locked",
+    "actions": ["toggle", "observe"],
+    "states": [
+      {
+        "id": "locked",
+        "observation": "locked",
+        "transitions": {
+          "observe": {"to": "locked", "emission": "locked"},
+          "toggle": {"to": "unlocked", "emission": "changed"}
+        }
+      },
+      {
+        "id": "unlocked",
+        "observation": "unlocked",
+        "transitions": {
+          "observe": {"to": "unlocked", "emission": "unlocked"},
+          "toggle": {"to": "locked", "emission": "changed"}
+        }
+      },
+      {
+        "id": "unreachable-copy",
+        "observation": "unlocked",
+        "transitions": {
+          "observe": {"to": "unreachable-copy", "emission": "unlocked"},
+          "toggle": {"to": "locked", "emission": "changed"}
+        }
+      }
+    ]
+  },
+  "context": {
+    "initial": "normal",
+    "states": [
+      {
+        "id": "normal",
+        "transitions": {
+          "observe": "normal",
+          "toggle": "normal"
+        }
+      }
+    ]
+  }
+}

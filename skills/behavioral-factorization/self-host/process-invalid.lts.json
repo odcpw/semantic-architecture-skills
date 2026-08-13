@@ -1,0 +1,16 @@
+{
+  "schema_version": "kerf.lts.v1",
+  "machine": {
+    "initial": "s0",
+    "actions": ["success"],
+    "states": [
+      {
+        "id": "s0",
+        "observation": "ready",
+        "transitions": {
+          "success": {"to": "missing", "emission": "successful-lts"}
+        }
+      }
+    ]
+  }
+}

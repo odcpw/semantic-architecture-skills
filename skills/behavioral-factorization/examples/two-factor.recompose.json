@@ -1,0 +1,54 @@
+{
+  "schema_version": "kerf.recompose.v1",
+  "factors": [
+    {
+      "id": "x",
+      "representation": {
+        "schema_version": "kerf.factor-representation.v2",
+        "certified_context": null,
+        "initial": "x0",
+        "actions": ["tick"],
+        "states": [
+          {"id": "x0", "observation": "off", "transitions": {"tick": {"status": "constrained", "to": "x1", "emission": "rise-x"}}},
+          {"id": "x1", "observation": "on", "transitions": {"tick": {"status": "constrained", "to": "x0", "emission": "fall-x"}}}
+        ]
+      }
+    },
+    {
+      "id": "y",
+      "representation": {
+        "schema_version": "kerf.factor-representation.v2",
+        "certified_context": null,
+        "initial": "y0",
+        "actions": ["tick"],
+        "states": [
+          {"id": "y0", "observation": "low", "transitions": {"tick": {"status": "constrained", "to": "y1", "emission": "rise-y"}}},
+          {"id": "y1", "observation": "high", "transitions": {"tick": {"status": "constrained", "to": "y0", "emission": "fall-y"}}}
+        ]
+      }
+    }
+  ],
+  "observation_readout": [
+    {"inputs": {"x": "off", "y": "low"}, "output": "0"},
+    {"inputs": {"x": "on", "y": "high"}, "output": "1"}
+  ],
+  "emission_readouts": {
+    "tick": [
+      {"inputs": {"x": "rise-x", "y": "rise-y"}, "output": "up"},
+      {"inputs": {"x": "fall-x", "y": "fall-y"}, "output": "down"}
+    ]
+  },
+  "reference": {
+    "initial": "r0",
+    "actions": ["tick"],
+    "states": [
+      {"id": "r0", "observation": "0", "transitions": {"tick": {"to": "r1", "emission": "up"}}},
+      {"id": "r1", "observation": "1", "transitions": {"tick": {"to": "r0", "emission": "down"}}}
+    ]
+  },
+  "limits": {
+    "max_product_states": 16,
+    "max_pairs": 16,
+    "max_witness_length": 16
+  }
+}

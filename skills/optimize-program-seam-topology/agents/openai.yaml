@@ -1,0 +1,4 @@
+interface:
+  display_name: "Optimize Program Seam Topology"
+  short_description: "Find constraint-safe semantic seams"
+  default_prompt: "Use $optimize-program-seam-topology to derive an observation-preserving semantic quotient, a Pareto-efficient ownership partition, and a verified migration path for this codebase."

@@ -1,0 +1,67 @@
+{
+  "schema_version": "kerf.recompose.v1",
+  "factors": [
+    {
+      "id": "boundary",
+      "representation": {
+        "schema_version": "kerf.factor-representation.v2",
+        "certified_context": {
+          "initial": "branch",
+          "states": [
+            {"id": "branch", "transitions": {"a": "only-a", "b": "only-b"}},
+            {"id": "only-a", "transitions": {"a": "only-a"}},
+            {"id": "only-b", "transitions": {"b": "only-b"}}
+          ]
+        },
+        "initial": "z",
+        "actions": ["a", "b", "c"],
+        "states": [
+          {
+            "id": "z",
+            "observation": "same",
+            "transitions": {
+              "a": {"status": "constrained", "to": "z", "emission": "step"},
+              "b": {"status": "constrained", "to": "z", "emission": "step"},
+              "c": {"status": "unconstrained"}
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "observation_readout": [
+    {"inputs": {"boundary": "same"}, "output": "same"}
+  ],
+  "emission_readouts": {
+    "a": [{"inputs": {"boundary": "step"}, "output": "step"}],
+    "b": [{"inputs": {"boundary": "step"}, "output": "step"}]
+  },
+  "reference": {
+    "initial": "live",
+    "actions": ["a", "b", "c"],
+    "states": [
+      {
+        "id": "live",
+        "observation": "same",
+        "transitions": {
+          "a": {"to": "live", "emission": "step"},
+          "b": {"to": "live", "emission": "step"},
+          "c": {"to": "live", "emission": "outside-context"}
+        }
+      }
+    ]
+  },
+  "context": {
+    "initial": "branch",
+    "states": [
+      {"id": "branch", "transitions": {"a": "only-a", "b": "only-b"}},
+      {"id": "only-a", "transitions": {"a": "only-a"}},
+      {"id": "only-b", "transitions": {"b": "only-b"}}
+    ]
+  },
+  "limits": {
+    "max_product_states": 16,
+    "max_pairs": 16,
+    "max_witness_length": 16
+  }
+}

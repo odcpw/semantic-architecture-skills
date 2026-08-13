@@ -1,0 +1,384 @@
+{
+  "schema_version": "kerf.semantic-model.v1",
+  "model_id": "semantic-toggle",
+  "subjects": [
+    {"id": "intent", "kind": "intent"},
+    {
+      "id": "implementation",
+      "kind": "implementation",
+      "revision": "d37fba610310c1266c5e1d84b3dbdab9e1e1f7d5",
+      "build_identity": "kerf-example-toggle"
+    }
+  ],
+  "scopes": [
+    {"id": "intent-scope", "subject": "intent", "contexts": ["normal"]},
+    {"id": "implementation-scope", "subject": "implementation", "contexts": ["normal"]}
+  ],
+  "entities": [
+    {
+      "id": "req-toggle",
+      "subject": "intent",
+      "label": "Toggling changes the observable lock state",
+      "kind": "requirement",
+      "modality": "must",
+      "acceptance_claims": ["claim-toggle"]
+    },
+    {
+      "id": "intent-lock-state",
+      "subject": "intent",
+      "label": "Lock state",
+      "kind": "carrier",
+      "fact": "lock-state",
+      "authority": "intent-authority"
+    },
+    {
+      "id": "intent-authority",
+      "subject": "intent",
+      "label": "Lock-state authority",
+      "kind": "authority",
+      "protocol": "single_writer",
+      "writers": ["intent-controller"]
+    },
+    {
+      "id": "intent-controller",
+      "subject": "intent",
+      "label": "Controller",
+      "kind": "actor",
+      "actor_kind": "state-machine"
+    },
+    {
+      "id": "intent-toggle",
+      "subject": "intent",
+      "label": "Toggle transition",
+      "kind": "transition"
+    },
+    {
+      "id": "intent-observation",
+      "subject": "intent",
+      "label": "Observed lock state",
+      "kind": "observation"
+    },
+    {
+      "id": "impl-file",
+      "subject": "implementation",
+      "label": "Finite toggle fixture",
+      "kind": "implementation",
+      "locator": "examples/toggle.lts.json"
+    },
+    {
+      "id": "impl-lock-state",
+      "subject": "implementation",
+      "label": "Implemented lock state",
+      "kind": "carrier",
+      "fact": "lock-state",
+      "authority": "impl-authority"
+    },
+    {
+      "id": "impl-authority",
+      "subject": "implementation",
+      "label": "Implemented writer protocol",
+      "kind": "authority",
+      "protocol": "single_writer",
+      "writers": ["impl-file"]
+    },
+    {
+      "id": "impl-toggle",
+      "subject": "implementation",
+      "label": "Implemented toggle",
+      "kind": "transition"
+    },
+    {
+      "id": "impl-observation",
+      "subject": "implementation",
+      "label": "Implemented observation",
+      "kind": "observation",
+      "oracle_evidence": ["ev-lts"]
+    }
+  ],
+  "relations": [
+    {
+      "id": "req-observed-by",
+      "kind": "requires_observation",
+      "tails": ["req-toggle"],
+      "heads": ["intent-observation"]
+    },
+    {
+      "id": "req-realized-by",
+      "kind": "realized_by",
+      "tails": ["req-toggle"],
+      "heads": ["intent-lock-state", "intent-toggle"]
+    },
+    {
+      "id": "intent-writes",
+      "kind": "writes",
+      "tails": ["intent-controller"],
+      "heads": ["intent-lock-state"]
+    },
+    {
+      "id": "impl-writes",
+      "kind": "writes",
+      "tails": ["impl-file"],
+      "heads": ["impl-lock-state"],
+      "evidence": ["ev-lts"]
+    },
+    {
+      "id": "impl-realizes",
+      "kind": "implements",
+      "tails": ["impl-file"],
+      "heads": ["intent-lock-state", "intent-toggle"],
+      "evidence": ["ev-lts"]
+    },
+    {
+      "id": "state-corresponds",
+      "kind": "corresponds_to",
+      "tails": ["impl-lock-state"],
+      "heads": ["intent-lock-state"],
+      "evidence": ["ev-lts"]
+    },
+    {
+      "id": "transition-corresponds",
+      "kind": "corresponds_to",
+      "tails": ["impl-toggle"],
+      "heads": ["intent-toggle"],
+      "evidence": ["ev-lts"]
+    }
+  ],
+  "bindings": [
+    {
+      "id": "binding-toggle-intent",
+      "subject": "intent",
+      "kind": "source_artifact",
+      "artifact_sha256": "11d2e0645a370a8b78bbf088abe3774806cc3cd106e813e389c3d1c73f32692d",
+      "locator": "examples/toggle.lts.json"
+    },
+    {
+      "id": "binding-toggle-source",
+      "subject": "implementation",
+      "kind": "source_artifact",
+      "artifact_sha256": "11d2e0645a370a8b78bbf088abe3774806cc3cd106e813e389c3d1c73f32692d",
+      "locator": "examples/toggle.lts.json",
+      "revision": "d37fba610310c1266c5e1d84b3dbdab9e1e1f7d5"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-intent-model",
+      "subject": "intent",
+      "binding": "binding-toggle-intent",
+      "kind": "specification",
+      "acquisition": "declared",
+      "sha256": "11d2e0645a370a8b78bbf088abe3774806cc3cd106e813e389c3d1c73f32692d",
+      "source": "examples/toggle.lts.json",
+      "coverage": {
+        "contexts": ["normal"],
+        "limitations": ["declared finite greenfield intent; not implementation evidence"]
+      }
+    },
+    {
+      "id": "ev-lts",
+      "subject": "implementation",
+      "binding": "binding-toggle-source",
+      "kind": "source",
+      "acquisition": "observed",
+      "sha256": "11d2e0645a370a8b78bbf088abe3774806cc3cd106e813e389c3d1c73f32692d",
+      "source": "examples/toggle.lts.json",
+      "revision": "d37fba610310c1266c5e1d84b3dbdab9e1e1f7d5",
+      "coverage": {
+        "contexts": ["normal"],
+        "limitations": ["declared finite fixture; not a source-code extraction"]
+      }
+    }
+  ],
+  "closures": [
+    {
+      "id": "closure-toggle-intent",
+      "subject": "intent",
+      "scope": "intent-scope",
+      "domain": "states and transitions in the declared greenfield toggle model",
+      "kind": "exhaustive_finite",
+      "evidence": ["ev-intent-model"]
+    },
+    {
+      "id": "closure-toggle-fixture",
+      "subject": "implementation",
+      "scope": "implementation-scope",
+      "domain": "states and transitions declared in examples/toggle.lts.json",
+      "kind": "complete_for_declared_corpus",
+      "evidence": ["ev-lts"]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-toggle",
+      "subject": "intent",
+      "scope": "intent-scope",
+      "kind": "requirement_satisfied",
+      "statement": "The implementation satisfies the toggle requirement",
+      "epistemic_class": "bounded_check",
+      "verdict": "unknown",
+      "subjects": ["req-toggle", "impl-file"],
+      "nonclaims": ["the finite fixture does not establish correspondence to an arbitrary source implementation"]
+    }
+  ],
+  "work_items": [
+    {
+      "id": "work-toggle",
+      "intent": "Implement and falsify the observable toggle behavior",
+      "changes": ["intent-lock-state", "intent-toggle"],
+      "satisfies": ["req-toggle"],
+      "evidence_gates": ["claim-toggle"]
+    }
+  ],
+  "projections": [
+    {
+      "id": "toggle-intent-lts",
+      "subject": "intent",
+      "scope": "intent-scope",
+      "operation": "validate-lts",
+      "lowering_version": "semantic-toggle-intent-v1",
+      "target_input": {
+        "schema_version": "kerf.lts.v1",
+        "machine": {
+          "initial": "locked",
+          "actions": ["toggle", "observe"],
+          "states": [
+            {
+              "id": "locked",
+              "observation": "locked",
+              "transitions": {
+                "observe": {"to": "locked", "emission": "locked"},
+                "toggle": {"to": "unlocked", "emission": "changed"}
+              }
+            },
+            {
+              "id": "unlocked",
+              "observation": "unlocked",
+              "transitions": {
+                "observe": {"to": "unlocked", "emission": "unlocked"},
+                "toggle": {"to": "locked", "emission": "changed"}
+              }
+            },
+            {
+              "id": "unreachable-copy",
+              "observation": "unlocked",
+              "transitions": {
+                "observe": {"to": "unreachable-copy", "emission": "unlocked"},
+                "toggle": {"to": "locked", "emission": "changed"}
+              }
+            }
+          ]
+        },
+        "context": {
+          "initial": "normal",
+          "states": [
+            {"id": "normal", "transitions": {"observe": "normal", "toggle": "normal"}}
+          ]
+        }
+      },
+      "scope_entities": [
+        "req-toggle",
+        "intent-lock-state",
+        "intent-authority",
+        "intent-controller",
+        "intent-toggle",
+        "intent-observation"
+      ],
+      "entity_map": [
+        {"source": "intent-lock-state", "target_pointer": "/machine/states"},
+        {"source": "intent-toggle", "target_pointer": "/machine/states/0/transitions/toggle"},
+        {"source": "intent-observation", "target_pointer": "/machine/states/0/observation"}
+      ],
+      "relation_map": [
+        {"source": "intent-writes", "target_pointer": "/machine/states/0/transitions"}
+      ],
+      "omitted_entities": [
+        {"id": "req-toggle", "reason": "requirement traceability is retained by the manifest, outside kerf.lts.v1"},
+        {"id": "intent-authority", "reason": "authority is retained by the manifest, outside kerf.lts.v1"},
+        {"id": "intent-controller", "reason": "actor identity is retained by the manifest, outside kerf.lts.v1"}
+      ],
+      "omitted_relations": [
+        {"id": "req-observed-by", "reason": "requirement traceability is outside the LTS transition relation"},
+        {"id": "req-realized-by", "reason": "requirement traceability is outside the LTS transition relation"},
+        {"id": "impl-realizes", "reason": "cross-subject implementation binding is outside kerf.lts.v1"},
+        {"id": "state-corresponds", "reason": "cross-subject correspondence is outside kerf.lts.v1"},
+        {"id": "transition-corresponds", "reason": "cross-subject correspondence is outside kerf.lts.v1"}
+      ],
+      "evidence_ids": ["ev-intent-model"],
+      "closure_ids": ["closure-toggle-intent"],
+      "source_claim_ceiling": "bounded_check"
+    },
+    {
+      "id": "toggle-lts",
+      "subject": "implementation",
+      "scope": "implementation-scope",
+      "operation": "validate-lts",
+      "lowering_version": "semantic-toggle-explicit-v1",
+      "target_input": {
+        "schema_version": "kerf.lts.v1",
+        "machine": {
+          "initial": "locked",
+          "actions": ["toggle", "observe"],
+          "states": [
+            {
+              "id": "locked",
+              "observation": "locked",
+              "transitions": {
+                "observe": {"to": "locked", "emission": "locked"},
+                "toggle": {"to": "unlocked", "emission": "changed"}
+              }
+            },
+            {
+              "id": "unlocked",
+              "observation": "unlocked",
+              "transitions": {
+                "observe": {"to": "unlocked", "emission": "unlocked"},
+                "toggle": {"to": "locked", "emission": "changed"}
+              }
+            },
+            {
+              "id": "unreachable-copy",
+              "observation": "unlocked",
+              "transitions": {
+                "observe": {"to": "unreachable-copy", "emission": "unlocked"},
+                "toggle": {"to": "locked", "emission": "changed"}
+              }
+            }
+          ]
+        },
+        "context": {
+          "initial": "normal",
+          "states": [
+            {"id": "normal", "transitions": {"observe": "normal", "toggle": "normal"}}
+          ]
+        }
+      },
+      "scope_entities": [
+        "impl-file",
+        "impl-lock-state",
+        "impl-authority",
+        "impl-toggle",
+        "impl-observation"
+      ],
+      "entity_map": [
+        {"source": "impl-file", "target_pointer": "/machine/actions"},
+        {"source": "impl-lock-state", "target_pointer": "/machine/states"},
+        {"source": "impl-toggle", "target_pointer": "/machine/states/0/transitions/toggle"},
+        {"source": "impl-observation", "target_pointer": "/machine/states/0/observation"}
+      ],
+      "relation_map": [
+        {"source": "impl-writes", "target_pointer": "/machine/states/0/transitions"}
+      ],
+      "omitted_entities": [
+        {"id": "impl-authority", "reason": "authority is recorded by the manifest but is outside kerf.lts.v1"}
+      ],
+      "omitted_relations": [
+        {"id": "impl-realizes", "reason": "source-to-intent binding is not an LTS transition"},
+        {"id": "state-corresponds", "reason": "cross-subject correspondence is not an LTS transition"},
+        {"id": "transition-corresponds", "reason": "cross-subject correspondence is not an LTS transition"}
+      ],
+      "evidence_ids": ["ev-lts"],
+      "closure_ids": ["closure-toggle-fixture"],
+      "source_claim_ceiling": "evidence_inference"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "schema_version": "kerf.lts.v1",
+  "machine": {
+    "initial": "s0",
+    "actions": ["success", "error", "probe"],
+    "states": [
+      {
+        "id": "s0",
+        "observation": "ready",
+        "transitions": {
+          "success": {"to": "s1", "emission": "successful-lts"},
+          "error": {"to": "s0", "emission": "outside-context"},
+          "probe": {"to": "s0", "emission": "outside-context"}
+        }
+      },
+      {
+        "id": "s1",
+        "observation": "ready",
+        "transitions": {
+          "success": {"to": "s1", "emission": "outside-context"},
+          "error": {"to": "s2", "emission": "typed-error"},
+          "probe": {"to": "s1", "emission": "outside-context"}
+        }
+      },
+      {
+        "id": "s2",
+        "observation": "ready",
+        "transitions": {
+          "success": {"to": "s2", "emission": "outside-context"},
+          "error": {"to": "s2", "emission": "outside-context"},
+          "probe": {"to": "s3", "emission": "resource-unknown"}
+        }
+      },
+      {
+        "id": "s3",
+        "observation": "ready",
+        "transitions": {
+          "success": {"to": "s3", "emission": "outside-context"},
+          "error": {"to": "s3", "emission": "outside-context"},
+          "probe": {"to": "s0", "emission": "distinguishing-witness"}
+        }
+      }
+    ]
+  },
+  "context": {
+    "initial": "c0",
+    "states": [
+      {"id": "c0", "transitions": {"success": "c1"}},
+      {"id": "c1", "transitions": {"error": "c2"}},
+      {"id": "c2", "transitions": {"probe": "c3"}},
+      {"id": "c3", "transitions": {"probe": "c0"}}
+    ]
+  },
+  "limits": {
+    "max_product_states": 16,
+    "max_pairs": 16,
+    "max_witness_length": 16
+  }
+}

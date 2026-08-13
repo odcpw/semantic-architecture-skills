@@ -1,0 +1,64 @@
+{
+  "schema_version": "kerf.observation-plan.v1",
+  "subject": {
+    "schema_version": "kerf.cert.lts-subject.v1",
+    "machine": {
+      "initial": "locked",
+      "actions": ["toggle"],
+      "states": [
+        {
+          "id": "locked",
+          "observation": "locked",
+          "transitions": {"toggle": {"to": "unlocked", "emission": "changed"}}
+        },
+        {
+          "id": "unlocked",
+          "observation": "unlocked",
+          "transitions": {"toggle": {"to": "locked", "emission": "changed"}}
+        }
+      ]
+    },
+    "context": null
+  },
+  "binding": {
+    "id": "printf-toggle",
+    "working_directory": "/tmp",
+    "environment": {},
+    "open": {"program": "/usr/bin/true", "program_sha256": "8bc9a73afd7d85061160857536e093ded799dae7a2f0cf5758c4553f2f83002d", "expected_control": {"exit_code": 0}},
+    "reset": {"program": "/usr/bin/true", "program_sha256": "8bc9a73afd7d85061160857536e093ded799dae7a2f0cf5758c4553f2f83002d", "expected_control": {"exit_code": 0}},
+    "initial_probe": {"program": "/usr/bin/printf", "program_sha256": "c06f1e931d10653b6a02b3a0c2ea4288e87f8c4a4e12be6aab538f31577f65f1", "args": ["locked"]},
+    "close": {"program": "/usr/bin/true", "program_sha256": "8bc9a73afd7d85061160857536e093ded799dae7a2f0cf5758c4553f2f83002d", "expected_control": {"exit_code": 0}},
+    "action_invocations": [
+      {
+        "action": "toggle",
+        "invocation": {"program": "/usr/bin/printf", "program_sha256": "c06f1e931d10653b6a02b3a0c2ea4288e87f8c4a4e12be6aab538f31577f65f1", "args": ["changed|unlocked"]}
+      }
+    ],
+    "output_classes": [
+      {
+        "id": "initial-locked",
+        "exit_code": 0,
+        "stdout_hex": "6c6f636b6564",
+        "stderr_hex": "",
+        "observation": "locked"
+      },
+      {
+        "id": "changed-unlocked",
+        "exit_code": 0,
+        "stdout_hex": "6368616e6765647c756e6c6f636b6564",
+        "stderr_hex": "",
+        "observation": "unlocked",
+        "emission": "changed"
+      }
+    ],
+    "negative_controls": [
+      {
+        "id": "nearby-bogus-output",
+        "invocation": {"program": "/usr/bin/printf", "program_sha256": "c06f1e931d10653b6a02b3a0c2ea4288e87f8c4a4e12be6aab538f31577f65f1", "args": ["bogus"]},
+        "expected_rejection": "output belongs to no modeled observation class"
+      }
+    ]
+  },
+  "actions": ["toggle"],
+  "repetitions": 2
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": "kerf.certificate-check.v1",
+  "claim": {
+    "kind": "lts_trace",
+    "subject": {
+      "schema_version": "kerf.cert.lts-subject.v1",
+      "machine": {
+        "initial": "locked",
+        "actions": ["toggle", "observe"],
+        "states": [
+          {
+            "id": "locked",
+            "observation": "locked",
+            "transitions": {
+              "observe": {"to": "locked", "emission": "locked"},
+              "toggle": {"to": "unlocked", "emission": "changed"}
+            }
+          },
+          {
+            "id": "unlocked",
+            "observation": "unlocked",
+            "transitions": {
+              "observe": {"to": "unlocked", "emission": "unlocked"},
+              "toggle": {"to": "locked", "emission": "changed"}
+            }
+          }
+        ]
+      },
+      "context": null
+    },
+    "subject_sha256": "2f1c07a6d60a6acc6076bce472d506b2cc4be4a772328d5826f1d6d904f95853",
+    "initial": {"state": "locked", "context": null, "observation": "locked"},
+    "steps": [
+      {
+        "action": "toggle",
+        "emission": "changed",
+        "to": {"state": "unlocked", "context": null, "observation": "unlocked"}
+      },
+      {
+        "action": "observe",
+        "emission": "unlocked",
+        "to": {"state": "unlocked", "context": null, "observation": "unlocked"}
+      }
+    ]
+  }
+}

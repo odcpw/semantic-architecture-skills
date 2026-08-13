@@ -1,0 +1,35 @@
+{
+  "schema_version": "kerf.compare.v1",
+  "left": {
+    "initial": "draw-0",
+    "actions": ["cast"],
+    "states": [
+      {
+        "id": "draw-0",
+        "observation": "ready",
+        "transitions": {"cast": {"to": "draw-1", "emission": "spark"}}
+      },
+      {
+        "id": "draw-1",
+        "observation": "ready",
+        "transitions": {"cast": {"to": "draw-1", "emission": "goat"}}
+      }
+    ]
+  },
+  "right": {
+    "initial": "draw-0",
+    "actions": ["cast"],
+    "states": [
+      {
+        "id": "draw-0",
+        "observation": "ready",
+        "transitions": {"cast": {"to": "draw-1", "emission": "spark"}}
+      },
+      {
+        "id": "draw-1",
+        "observation": "ready",
+        "transitions": {"cast": {"to": "draw-1", "emission": "fireball"}}
+      }
+    ]
+  }
+}

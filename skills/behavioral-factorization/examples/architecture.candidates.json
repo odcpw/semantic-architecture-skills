@@ -1,0 +1,37 @@
+{
+  "schema_version": "kerf.candidates.v1",
+  "elements": ["world", "projection", "journal"],
+  "modules": ["core", "presentation"],
+  "constraints": {
+    "co_locate": [],
+    "separate": [["world", "projection"]],
+    "pinned": {"world": "core"},
+    "authority_groups": [
+      {"id": "world-state", "members": ["world"]}
+    ]
+  },
+  "metric_definitions": [
+    {"id": "boundary_bits", "unit": "bits_per_step", "direction": "minimize"},
+    {"id": "headroom", "unit": "bytes_per_second", "direction": "maximize"}
+  ],
+  "candidates": [
+    {
+      "id": "borrowed-projection",
+      "assignment": {"world": "core", "projection": "presentation", "journal": "core"},
+      "authority": {"world-state": "world"},
+      "metrics": {"boundary_bits": "128", "headroom": "4096"}
+    },
+    {
+      "id": "chatty-projection",
+      "assignment": {"world": "core", "projection": "presentation", "journal": "presentation"},
+      "authority": {"world-state": "world"},
+      "metrics": {"boundary_bits": "512", "headroom": "2048"}
+    },
+    {
+      "id": "illegal-co-location",
+      "assignment": {"world": "core", "projection": "core", "journal": "core"},
+      "authority": {"world-state": "world"},
+      "metrics": {"boundary_bits": "0", "headroom": "999999"}
+    }
+  ]
+}

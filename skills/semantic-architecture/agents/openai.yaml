@@ -1,0 +1,4 @@
+interface:
+  display_name: "Semantic Architecture"
+  short_description: "Build or recover evidence-bearing system models"
+  default_prompt: "Use $semantic-architecture to construct or recover a semantic model, expose unknowns and conflicts, and compile bounded proof and work obligations."

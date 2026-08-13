@@ -1,0 +1,4 @@
+interface:
+  display_name: "Behavioral Factorization"
+  short_description: "Check explicit finite boundary models"
+  default_prompt: "Use $behavioral-factorization to validate or falsify this explicit finite boundary model."

@@ -1,0 +1,32 @@
+{
+  "schema_version": "kerf.transport.v1",
+  "workload_id": "representative-step-v1",
+  "rate_unit": "bytes_per_second",
+  "weighted_hop_traffic_unit": "byte_hops_per_second",
+  "resources": ["core", "llc", "dram"],
+  "links": [
+    {
+      "id": "core-llc",
+      "from": "core",
+      "to": "llc",
+      "capacity": {"num": "1000000", "den": "1"},
+      "latency_ns": "12"
+    },
+    {
+      "id": "llc-dram",
+      "from": "llc",
+      "to": "dram",
+      "capacity": {"num": "500000", "den": "1"},
+      "latency_ns": "80"
+    }
+  ],
+  "commodities": [
+    {
+      "id": "world-read",
+      "source": "core",
+      "sink": "dram",
+      "demand": {"num": "64000", "den": "1"},
+      "route": ["core-llc", "llc-dram"]
+    }
+  ]
+}

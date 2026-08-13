@@ -1,0 +1,41 @@
+{
+  "schema_version": "kerf.factor.v1",
+  "machine": {
+    "initial": "live",
+    "actions": ["a", "b", "c"],
+    "states": [
+      {
+        "id": "live",
+        "observation": "same",
+        "transitions": {
+          "a": {"to": "live", "emission": "step"},
+          "b": {"to": "live", "emission": "step"},
+          "c": {"to": "live", "emission": "outside-context"}
+        }
+      },
+      {
+        "id": "unused",
+        "observation": "same",
+        "transitions": {
+          "a": {"to": "unused", "emission": "step"},
+          "b": {"to": "unused", "emission": "step"},
+          "c": {"to": "unused", "emission": "outside-context"}
+        }
+      }
+    ]
+  },
+  "context": {
+    "initial": "branch",
+    "states": [
+      {"id": "branch", "transitions": {"a": "only-a", "b": "only-b"}},
+      {"id": "only-a", "transitions": {"a": "only-a"}},
+      {"id": "only-b", "transitions": {"b": "only-b"}}
+    ]
+  },
+  "factor_map": [
+    {"machine_state": "live", "context_state": "branch", "boundary_state": "z"},
+    {"machine_state": "live", "context_state": "only-a", "boundary_state": "z"},
+    {"machine_state": "live", "context_state": "only-b", "boundary_state": "z"}
+  ],
+  "limits": {"max_product_states": 16}
+}

@@ -1,0 +1,94 @@
+{
+  "schema_version": "kerf.recompose.v1",
+  "factors": [
+    {
+      "id": "process",
+      "representation": {
+        "schema_version": "kerf.factor-representation.v2",
+        "certified_context": {
+          "initial": "c0",
+          "states": [
+            {"id": "c0", "transitions": {"success": "c1"}},
+            {"id": "c1", "transitions": {"error": "c2"}},
+            {"id": "c2", "transitions": {"probe": "c3"}},
+            {"id": "c3", "transitions": {"probe": "c0"}}
+          ]
+        },
+        "initial": "bootstrap",
+        "actions": ["error", "probe", "success"],
+        "states": [
+          {"id": "bootstrap", "observation": "ready", "transitions": {
+            "success": {"status": "constrained", "to": "bootstrap", "emission": "successful-lts"},
+            "error": {"status": "constrained", "to": "unknown", "emission": "typed-error"},
+            "probe": {"status": "unconstrained"}
+          }},
+          {"id": "unknown", "observation": "ready", "transitions": {
+            "success": {"status": "unconstrained"},
+            "error": {"status": "unconstrained"},
+            "probe": {"status": "constrained", "to": "witness", "emission": "resource-unknown"}
+          }},
+          {"id": "witness", "observation": "ready", "transitions": {
+            "success": {"status": "unconstrained"},
+            "error": {"status": "unconstrained"},
+            "probe": {"status": "constrained", "to": "bootstrap", "emission": "distinguishing-witness"}
+          }}
+        ]
+      }
+    }
+  ],
+  "observation_readout": [
+    {"inputs": {"process": "ready"}, "output": "ready"}
+  ],
+  "emission_readouts": {
+    "success": [
+      {"inputs": {"process": "successful-lts"}, "output": "successful-lts"}
+    ],
+    "error": [
+      {"inputs": {"process": "typed-error"}, "output": "typed-error"}
+    ],
+    "probe": [
+      {"inputs": {"process": "resource-unknown"}, "output": "resource-unknown"},
+      {"inputs": {"process": "distinguishing-witness"}, "output": "distinguishing-witness"}
+    ]
+  },
+  "reference": {
+    "initial": "s0",
+    "actions": ["success", "error", "probe"],
+    "states": [
+      {"id": "s0", "observation": "ready", "transitions": {
+        "success": {"to": "s1", "emission": "successful-lts"},
+        "error": {"to": "s0", "emission": "outside-context"},
+        "probe": {"to": "s0", "emission": "outside-context"}
+      }},
+      {"id": "s1", "observation": "ready", "transitions": {
+        "success": {"to": "s1", "emission": "outside-context"},
+        "error": {"to": "s2", "emission": "typed-error"},
+        "probe": {"to": "s1", "emission": "outside-context"}
+      }},
+      {"id": "s2", "observation": "ready", "transitions": {
+        "success": {"to": "s2", "emission": "outside-context"},
+        "error": {"to": "s2", "emission": "outside-context"},
+        "probe": {"to": "s3", "emission": "resource-unknown"}
+      }},
+      {"id": "s3", "observation": "ready", "transitions": {
+        "success": {"to": "s3", "emission": "outside-context"},
+        "error": {"to": "s3", "emission": "outside-context"},
+        "probe": {"to": "s0", "emission": "distinguishing-witness"}
+      }}
+    ]
+  },
+  "context": {
+    "initial": "c0",
+    "states": [
+      {"id": "c0", "transitions": {"success": "c1"}},
+      {"id": "c1", "transitions": {"error": "c2"}},
+      {"id": "c2", "transitions": {"probe": "c3"}},
+      {"id": "c3", "transitions": {"probe": "c0"}}
+    ]
+  },
+  "limits": {
+    "max_product_states": 16,
+    "max_pairs": 16,
+    "max_witness_length": 16
+  }
+}

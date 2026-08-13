@@ -1,0 +1,39 @@
+{
+  "schema_version": "kerf.factor.v1",
+  "machine": {
+    "initial": "root",
+    "actions": ["a", "b"],
+    "states": [
+      {
+        "id": "root",
+        "observation": "root",
+        "transitions": {
+          "a": {"to": "left", "emission": "branch"},
+          "b": {"to": "right", "emission": "branch"}
+        }
+      },
+      {
+        "id": "left",
+        "observation": "left",
+        "transitions": {
+          "a": {"to": "left", "emission": "same"},
+          "b": {"to": "left", "emission": "same"}
+        }
+      },
+      {
+        "id": "right",
+        "observation": "right",
+        "transitions": {
+          "a": {"to": "right", "emission": "same"},
+          "b": {"to": "right", "emission": "same"}
+        }
+      }
+    ]
+  },
+  "factor_map": [
+    {"machine_state": "root", "context_state": null, "boundary_state": "root-z"},
+    {"machine_state": "left", "context_state": null, "boundary_state": "merged-z"},
+    {"machine_state": "right", "context_state": null, "boundary_state": "merged-z"}
+  ],
+  "limits": {"max_product_states": 16}
+}

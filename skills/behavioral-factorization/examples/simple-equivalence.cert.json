@@ -1,0 +1,44 @@
+{
+  "schema_version": "kerf.certificate-check.v1",
+  "claim": {
+    "kind": "compare_equivalence_relation",
+    "subject": {
+      "schema_version": "kerf.cert.compare-subject.v1",
+      "left": {
+        "initial": "left",
+        "actions": ["tick"],
+        "states": [
+          {
+            "id": "left",
+            "observation": "ready",
+            "transitions": {"tick": {"to": "left", "emission": "done"}}
+          }
+        ]
+      },
+      "right": {
+        "initial": "right",
+        "actions": ["tick"],
+        "states": [
+          {
+            "id": "right",
+            "observation": "ready",
+            "transitions": {"tick": {"to": "right", "emission": "done"}}
+          }
+        ]
+      },
+      "context": null
+    },
+    "subject_sha256": "7da7d5bd781bf5273888957971002997bbf84278db85aeedab104a708852baf9",
+    "relation": [
+      {"left": "left", "right": "right", "context": null}
+    ],
+    "provenance": {
+      "producer": "example",
+      "operation": "hand-authored",
+      "input_sha256": "not-asserted",
+      "tool_version": "not-asserted",
+      "limits": null,
+      "revision": null
+    }
+  }
+}

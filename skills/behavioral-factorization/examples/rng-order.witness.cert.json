@@ -1,0 +1,49 @@
+{
+  "schema_version": "kerf.certificate-check.v1",
+  "claim": {
+    "kind": "compare_inequivalence_witness",
+    "subject": {
+      "schema_version": "kerf.cert.compare-subject.v1",
+      "left": {
+        "initial": "draw-0",
+        "actions": ["cast"],
+        "states": [
+          {
+            "id": "draw-0",
+            "observation": "ready",
+            "transitions": {"cast": {"to": "draw-1", "emission": "spark"}}
+          },
+          {
+            "id": "draw-1",
+            "observation": "ready",
+            "transitions": {"cast": {"to": "draw-1", "emission": "goat"}}
+          }
+        ]
+      },
+      "right": {
+        "initial": "draw-0",
+        "actions": ["cast"],
+        "states": [
+          {
+            "id": "draw-0",
+            "observation": "ready",
+            "transitions": {"cast": {"to": "draw-1", "emission": "spark"}}
+          },
+          {
+            "id": "draw-1",
+            "observation": "ready",
+            "transitions": {"cast": {"to": "draw-1", "emission": "fireball"}}
+          }
+        ]
+      },
+      "context": null
+    },
+    "subject_sha256": "fbf5b932f480d005aa35b70b344523fd88d20cf382d804f0d369ae7e610442a6",
+    "word": ["cast", "cast"],
+    "mismatch": {
+      "kind": "transition_emission",
+      "left": "goat",
+      "right": "fireball"
+    }
+  }
+}
