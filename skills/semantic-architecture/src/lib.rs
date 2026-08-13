@@ -2,6 +2,7 @@ pub mod converge;
 pub mod coordinates;
 pub mod cycle;
 pub mod execution;
+pub mod generate;
 pub mod manifest;
 pub mod observe;
 pub mod semantic;

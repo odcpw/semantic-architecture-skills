@@ -43,10 +43,18 @@ project-specific truth.
   matching, exact represented Pareto frontier, computed generator coverage,
   and campaign stopping states. Open-ended stationarity requires two distinct
   complete quiescent sweep receipts bound to the unchanged decision state.
+- `src/generate.rs` and `src/generate/source.rs` own deterministic,
+  content-bound transformation generation. Generators consume the whole
+  purpose envelope and optional brownfield inventory, centralize candidate
+  identity, and must emit semantic witnesses, predictions for every metric,
+  proof obligations, falsifiers, and nonclaims. File size alone is not a
+  semantic witness.
 - `src/bin/kerf-model.rs` and `src/bin/kerf-observe.rs` are machine-facing JSON
   CLIs. `src/bin/kerf-evidence.rs` executes evidence plans and evaluates
   legacy stopping contracts. `src/bin/kerf-cycle.rs` evaluates living campaign
-  state. Success data belongs on stdout and typed errors on stderr.
+  state. `src/bin/kerf-generate.rs` binds envelopes, exposes the registry, and
+  emits or replays transformation batches. Success data belongs on stdout and
+  typed errors on stderr.
 - Formal class and reality contact are independent coordinates. Never promote
   a finite Kerf result, passive source extraction, LLM interpretation, trace,
   or analogy into source-program equivalence.

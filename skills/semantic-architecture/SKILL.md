@@ -56,6 +56,10 @@ cargo run --quiet --bin kerf-evidence -- evaluate DECISION_CONTRACT.json PACKAGE
 cargo run --quiet --bin kerf-cycle -- identity
 cargo run --quiet --bin kerf-cycle -- hashes CAMPAIGN.json
 cargo run --quiet --bin kerf-cycle -- evaluate CAMPAIGN.json --require-terminal
+cargo run --quiet --bin kerf-generate -- registry
+cargo run --quiet --bin kerf-generate -- bind-envelope REQUEST.json
+cargo run --quiet --bin kerf-generate -- generate REQUEST.json --require-complete
+cargo run --quiet --bin kerf-generate -- validate REQUEST.json BATCH.json
 ```
 
 All success data is versioned JSON on stdout. Errors are typed JSON on stderr.
@@ -176,6 +180,33 @@ campaign state.
 contracts. It re-audits the evidence packages, but its caller-supplied
 `generators_exhausted` and `retirement_condition_met` fields are not scheduler
 proof and must not be used to claim whole-campaign closure.
+
+## Generate transformations without asking for a seam
+
+Use `kerf-generate` when the campaign has a content-bound purpose envelope but
+the operator has not named a file, seam, or refactor. Greenfield generation
+consumes capabilities, semantic facts and their writers/readers, protected
+observations, contexts, constraints, metrics, and allowed transformation
+families. Brownfield generation adds a bounded, deterministic source inventory.
+Read [transformation-generation.md](references/transformation-generation.md)
+before authoring a request.
+
+The built-in registry covers capability construction, behavioral-factor
+realization, authority consolidation, isomorphic duplicate extraction, and
+split/fuse/relocate candidates. Every candidate must bind the parent search
+basis and generator registry; name a semantic witness; predict a direction or
+explicit `unknown` for every declared metric; carry an executable proof
+obligation and decisive falsifier; and retain nonclaims. Candidate identity is
+derived from all of that content. `validate` deterministically replays the
+request against the current registry and source inventory, so edited or stale
+batches fail closed.
+
+Generation is not application. A lexical source match is a heuristic and a
+normalized repeated block is only a syntactic witness. Route generated
+behavioral factors through Kerf, boundary changes through Seam Topology, and
+code changes through isomorphic transformation plus executed evidence. A
+bounded or skipped source inventory returns `coverage.complete=false`; never
+turn it into generator exhaustion.
 
 Do not repeat an expensive pass when subject revision, evidence, falsifiers,
 providers, bounds, and decision contract are unchanged. A second invocation on
