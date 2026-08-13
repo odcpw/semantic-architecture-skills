@@ -159,6 +159,7 @@ fn print_help() {
     println!(
         "kerf-selfhost {TOOL_VERSION}\n\
 Run one exact kerf executable against a revision-bound raw-byte process corpus.\n\n\
+The repository root may be the Git top level or a tracked project subdirectory inside it.\n\n\
 USAGE:\n  kerf-selfhost --kerf PATH --repo-root PATH --expect-head HEX --corpus CORPUS.json [--allow-dirty]\n\n\
 Exit 0 means every process observation matched; exit 1 is a checked mismatch;\n\
 exit 2 is invalid input or I/O failure. JSON results use stdout; errors use stderr."

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Validate and score declared program-seam graph candidates.
 
 This is a deterministic decision aid. It validates the declared model and

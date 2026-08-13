@@ -72,6 +72,7 @@ pub struct ExpectedObservation {
 pub struct SelfHostResult {
     pub algorithm: &'static str,
     pub matched: bool,
+    pub repository_subpath: String,
     pub expected_git_head: String,
     pub observed_git_head: String,
     pub git_dirty: bool,
@@ -167,6 +168,7 @@ pub fn check(
     Ok(SelfHostResult {
         algorithm: "exact_process_corpus_v1",
         matched,
+        repository_subpath: revision.repository_subpath,
         expected_git_head: expected_git_head.to_owned(),
         observed_git_head: revision.head,
         git_dirty: revision.dirty,
@@ -175,7 +177,7 @@ pub fn check(
         case_count: results.len(),
         cases: results,
         nonclaims: vec![
-            "The result checks one repository HEAD and binds one local executable hash, but it does not prove a reproducible source-to-binary derivation or source-code equivalence.",
+            "The result checks one Git worktree HEAD and repository subpath and binds one local executable hash, but it does not prove a reproducible source-to-binary derivation or source-code equivalence.",
             "The fixed corpus is not complete behavior coverage and does not infer a model, factor map, readout, or architecture.",
             "The adapter assumes the selected local executable terminates and does not sandbox it or bound its output.",
             "Environment clearing removes inherited variables but does not normalize the operating system, loader, filesystem, or hardware.",
@@ -256,6 +258,7 @@ fn run_case(
 struct RevisionObservation {
     head: String,
     dirty: bool,
+    repository_subpath: String,
 }
 
 fn check_revision(
@@ -284,22 +287,34 @@ fn check_revision(
             "could not resolve Git top level {top_level:?}: {error}"
         ))
     })?;
-    if top_level != repository_root {
-        return Err(ToolError::invalid(format!(
-            "repository root {} is not the Git top level {}",
+    let relative = repository_root.strip_prefix(&top_level).map_err(|_| {
+        ToolError::internal(format!(
+            "resolved repository root {} is not within Git top level {}",
             repository_root.display(),
             top_level.display()
-        )));
-    }
-    let head = git_output(&repository_root, &["rev-parse", "--verify", "HEAD"])?;
+        ))
+    })?;
+    let repository_subpath = if relative.as_os_str().is_empty() {
+        ".".to_owned()
+    } else {
+        relative
+            .to_str()
+            .ok_or_else(|| ToolError::invalid("repository subpath must be valid UTF-8"))?
+            .replace(std::path::MAIN_SEPARATOR, "/")
+    };
+    let head = git_output(&top_level, &["rev-parse", "--verify", "HEAD"])?;
     let head = head.trim().to_owned();
     if head != expected_git_head {
         return Err(ToolError::invalid(format!(
             "Git HEAD mismatch: expected {expected_git_head}, observed {head}"
         )));
     }
+    if repository_subpath != "." {
+        let tree_object = format!("{head}:{repository_subpath}");
+        git_output(&top_level, &["cat-file", "-e", &tree_object])?;
+    }
     let status = git_output(
-        &repository_root,
+        &top_level,
         &[
             "status",
             "--porcelain=v1",
@@ -313,7 +328,11 @@ fn check_revision(
             "repository has tracked or untracked changes; exact revision binding requires a clean tree",
         ));
     }
-    Ok(RevisionObservation { head, dirty })
+    Ok(RevisionObservation {
+        head,
+        dirty,
+        repository_subpath,
+    })
 }
 
 fn git_output(repository_root: &Path, args: &[&str]) -> Result<String, ToolError> {

@@ -65,7 +65,8 @@ JSON numeric or canonicalization semantics.
 roles: successful validation, typed invalid input, resource-limit unknown,
 distinguishing witness, lawful and nearby unlawful factors, and equivalent and
 nearby inequivalent recompositions. It also fails closed unless the requested
-Git HEAD matches and the repository is clean:
+project root is tracked by the requested Git HEAD and the entire containing Git
+worktree is clean:
 
 ```bash
 cargo build --bins --locked
@@ -76,8 +77,11 @@ target/debug/kerf-selfhost \
   --corpus "$PWD/self-host/corpus.json"
 ```
 
-The adapter binds an observed executable hash to one repository revision and
-one corpus run. It is a regression falsifier and frontend seed, not a proof of
+`--repo-root` may name either the Git top level or a tracked project
+subdirectory such as this skill inside an aggregate repository. The result
+binds that relative subpath separately from the containing worktree HEAD. The
+adapter binds an observed executable hash to one project subpath, repository
+revision, and corpus run. It is a regression falsifier and frontend seed, not a proof of
 source-to-binary reproducibility, source-program equivalence, or corpus
 completeness. `--allow-dirty` exists for development and reports the dirty
 state; it is not revision-bound evidence.

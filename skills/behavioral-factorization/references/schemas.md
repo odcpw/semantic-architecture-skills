@@ -69,17 +69,21 @@ observation is the tuple `(exit_code, stdout_bytes, stderr_bytes)`; lowercase
 hex is only its lossless JSON encoding. JSON parsing validates each declared
 role but does not replace raw-byte comparison.
 
-`kerf.self-host-result.v1` reports the expected and observed Git HEAD, dirty
-state, SHA-256 of the executable and corpus manifest, every input hash, the
-actual process tuple including Unix raw wait status where available, and exact
-mismatch fields. Exit `0` means all tuples matched, `1` is a checked tuple
+`kerf.self-host-result.v1` reports the requested project root as a relative
+`repository_subpath`, the expected and observed containing-worktree Git HEAD,
+dirty state for that whole worktree, SHA-256 of the executable and corpus
+manifest, every input hash, the actual process tuple including Unix raw wait
+status where available, and exact mismatch fields. The project root may be the
+Git top level (`.`) or a tracked subdirectory at that HEAD; this supports a
+skill inside an aggregate repository without conflating project and worktree
+identity. Exit `0` means all tuples matched, `1` is a checked tuple
 mismatch, `2` is invalid input or I/O failure, and `4` is an internal failure.
 The default rejects a dirty repository. `--allow-dirty` permits development
 runs but cannot establish exact-revision evidence.
 
-Exact claim: at the observed repository HEAD, the selected local executable
-with the reported hash produced the declared raw process observations on the
-fixed corpus in that run.
+Exact claim: at the observed repository HEAD and reported tracked project
+subpath, the selected local executable with the reported hash produced the
+declared raw process observations on the fixed corpus in that run.
 
 Nonclaims: reproducible derivation of that executable from the revision;
 source-program equivalence; behavior outside the corpus; model, factor,

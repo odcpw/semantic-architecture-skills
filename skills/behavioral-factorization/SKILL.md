@@ -140,8 +140,10 @@ bound when the context monitor is external side information.
 
 For the repository's fixed executable regression falsifier, run
 `kerf-selfhost` with an explicit `--kerf`, `--repo-root`, `--expect-head`, and
-`--corpus`. A clean-tree pass binds raw exit/stdout/stderr observations to one
-Git HEAD and executable hash. It does not prove source-to-binary derivation or
+`--corpus`. `--repo-root` may be a tracked subproject of a larger Git worktree;
+the result binds its relative subpath as well as the containing HEAD. A
+clean-tree pass binds raw exit/stdout/stderr observations to that subpath, one
+Git HEAD, and one executable hash. It does not prove source-to-binary derivation or
 generalize beyond the corpus; see [schemas.md](references/schemas.md).
 
 When another tool supplies a finite relation, distinguishing word, or recorded

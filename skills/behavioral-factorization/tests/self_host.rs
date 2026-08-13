@@ -22,6 +22,29 @@ fn current_head() -> String {
         .to_owned()
 }
 
+fn current_repository_subpath() -> String {
+    let output = Command::new("git")
+        .args([
+            "-C",
+            env!("CARGO_MANIFEST_DIR"),
+            "rev-parse",
+            "--show-prefix",
+        ])
+        .output()
+        .expect("git must run");
+    assert!(output.status.success());
+    let prefix = String::from_utf8(output.stdout)
+        .expect("Git prefix must be UTF-8")
+        .trim()
+        .trim_end_matches('/')
+        .to_owned();
+    if prefix.is_empty() {
+        ".".to_owned()
+    } else {
+        prefix
+    }
+}
+
 fn corpus() -> (Vec<u8>, SelfHostInput) {
     let bytes = fs::read(repo_path("self-host/corpus.json")).expect("corpus must read");
     let input = serde_json::from_slice(&bytes).expect("corpus must be valid JSON");
@@ -81,6 +104,10 @@ fn exact_corpus_invokes_real_kerf() {
     assert_eq!(envelope["schema_version"], "kerf.self-host-result.v1");
     assert_eq!(envelope["result"]["matched"], true);
     assert_eq!(envelope["result"]["case_count"], 8);
+    assert_eq!(
+        envelope["result"]["repository_subpath"],
+        current_repository_subpath()
+    );
     assert_eq!(envelope["result"]["expected_git_head"], current_head());
     assert_eq!(envelope["result"]["observed_git_head"], current_head());
     assert_eq!(
