@@ -20,7 +20,8 @@ This file adds only repository-specific truth to
 - `skills/semantic-architecture` owns the global semantic IR, executed
   evidence, decision contracts, and fixed-point stopping predicate.
 - `skills/optimize-program-seam-topology` owns typed seam graphs, feasible
-  partition scoring, and behavior-preserving migration planning.
+  structural partition scoring, exact bounded local Pareto stationarity, and
+  migration-candidate generation. It does not own campaign fixed points.
 - `skills/behavioral-factorization` owns exact finite behavioral checks.
 - Dependencies must remain conceptually acyclic: semantic architecture may
   compile finite claims into behavioral factorization; seam topology consumes

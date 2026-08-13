@@ -206,7 +206,9 @@ An agent report, stale artifact, zero-test filter, generated golden, or compile
 success does not establish preservation.
 
 Bind each candidate's accepted evidence to one structured candidate subject,
-the exact required closure, plan and receipt hashes, evaluator and skill
-identities, and one exclusively owned strict negative control. Reject orphan
-receipts, shared controls, and descriptions that imply source correspondence
-when only executable behavior was observed.
+the derived candidate-semantics SHA-256, exact required closure, plan and
+receipt hashes, evaluator, skill, and normative procedure identities. Executed
+observations additionally need one exclusively owned strict negative control;
+locally checked finite certificates instead need their exact proof artifact.
+Reject orphan receipts, shared claim/control receipts, and descriptions that
+imply source correspondence when only executable behavior was observed.

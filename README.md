@@ -6,13 +6,18 @@ three complementary architecture skills:
 | Skill | Responsibility |
 |---|---|
 | `semantic-architecture` | Construct or recover an evidence-bearing whole-system semantic model and compile decision obligations. |
-| `optimize-program-seam-topology` | Find feasible ownership boundaries and behavior-preserving migration paths inside that model. |
+| `optimize-program-seam-topology` | Generate and rank structurally feasible ownership boundaries and local migration candidates inside that model. |
 | `behavioral-factorization` | Check exact finite behavioral factors, equivalence witnesses, recomposition, and proof-carrying migration claims. |
 
 They form one feedback loop: semantic recovery names the model and unknowns;
-seam topology proposes inspectable cuts; behavioral factorization proves or
-falsifies the finite claims those cuts depend on; executed project evidence is
-then fed back into all three.
+seam topology proposes inspectable cuts and exact bounded local Pareto receipts;
+behavioral factorization proves or falsifies the finite semantic claims those
+cuts depend on; Semantic Architecture authenticates executed evidence, owns
+campaign stopping, and feeds accepted results back into all three.
+
+A local seam-stationarity receipt is one campaign input, never a global stop
+signal. Pending dominators and every undeclared or unexhausted generator remain
+open in the Semantic Architecture campaign.
 
 The bundle does not claim a universally smallest real program. It can establish
 bounded optima only inside an explicit grammar, model, observation set, and

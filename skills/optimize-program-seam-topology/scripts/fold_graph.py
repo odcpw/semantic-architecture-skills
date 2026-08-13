@@ -14,13 +14,14 @@ import math
 import sys
 from collections.abc import Iterable
 from dataclasses import dataclass
+from decimal import Decimal
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
-TOOL_VERSION = "2.0.0"
-SCHEMA_VERSION = 2
+TOOL_VERSION = "3.0.0"
+SCHEMA_VERSION = 3
 OBJECTIVE_NAMES = (
-    "duplicate_authority",
     "sync_work",
     "mutable_cut",
     "ordered_cut",
@@ -33,8 +34,12 @@ OBJECTIVE_NAMES = (
     "memory_bytes",
     "expected_rebuild_ms",
     "migration_cost",
-    "proof_deficit",
 )
+DIAGNOSTIC_NAMES = ("duplicate_authority", "proof_deficit")
+EVIDENCE_VIOLATION_CODES = {
+    "evidence_missing",
+    "uncovered_protected_observation",
+}
 ALLOWED_CLOSURES = {
     "observed_only",
     "sampled",
@@ -105,6 +110,7 @@ def load_json(path: str) -> dict[str, Any]:
         data = json.loads(
             Path(path).read_text(encoding="utf-8"),
             object_pairs_hook=no_duplicates,
+            parse_float=Decimal,
         )
     except OSError as exc:
         raise InputError("read_failed", str(exc), path) from exc
@@ -118,33 +124,153 @@ def load_json(path: str) -> dict[str, Any]:
 
 
 def canonical_sha256(value: Any) -> str:
+    def typed_tree(item: Any) -> Any:
+        if item is None:
+            return ["null"]
+        if isinstance(item, bool):
+            return ["boolean", item]
+        if isinstance(item, str):
+            return ["string", item]
+        if isinstance(item, (int, float, Decimal, Fraction)):
+            exact = exact_number(item, "canonical value", allow_negative=True)
+            return ["number", str(exact.numerator), str(exact.denominator)]
+        if isinstance(item, list):
+            return ["array", [typed_tree(element) for element in item]]
+        if isinstance(item, tuple):
+            return ["tuple", [typed_tree(element) for element in item]]
+        if isinstance(item, dict):
+            if any(not isinstance(key, str) for key in item):
+                raise InputError(
+                    "invalid_identity_key",
+                    "canonical identity objects require string keys",
+                )
+            return [
+                "object",
+                [[key, typed_tree(item[key])] for key in sorted(item)],
+            ]
+        raise InputError(
+            "invalid_identity_value",
+            f"unsupported canonical identity type {type(item).__name__}",
+        )
+
     encoded = json.dumps(
-        value,
+        typed_tree(value),
         ensure_ascii=False,
         separators=(",", ":"),
-        sort_keys=True,
     ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
 
+def identity_item_id(item: Any) -> str:
+    if isinstance(item, dict) and isinstance(item.get("id"), str):
+        return item["id"]
+    return ""
+
+
+def normalized_graph_identity(graph: dict[str, Any]) -> dict[str, Any]:
+    normalized = copy.deepcopy(graph)
+    decision = normalized.get("decision")
+    if isinstance(decision, dict):
+        for field in ("protected_observations", "prior_decision_receipts"):
+            if isinstance(decision.get(field), list):
+                decision[field].sort(key=identity_item_id)
+    if isinstance(normalized.get("vertices"), list):
+        normalized["vertices"].sort(key=identity_item_id)
+    if isinstance(normalized.get("hyperedges"), list):
+        for edge in normalized["hyperedges"]:
+            if isinstance(edge, dict):
+                for field in ("members", "tails", "heads", "layers"):
+                    if isinstance(edge.get(field), list):
+                        edge[field].sort()
+        normalized["hyperedges"].sort(key=identity_item_id)
+    if isinstance(normalized.get("constraints"), list):
+        for constraint in normalized["constraints"]:
+            if isinstance(constraint, dict):
+                for field in ("vertices", "modules"):
+                    if isinstance(constraint.get(field), list):
+                        constraint[field].sort()
+        normalized["constraints"].sort(key=identity_item_id)
+    if isinstance(normalized.get("semantic_constraints"), list):
+        normalized["semantic_constraints"].sort(key=identity_item_id)
+    if isinstance(normalized.get("nonclaims"), list):
+        normalized["nonclaims"].sort()
+    return normalized
+
+
+def normalized_candidate_identity(candidate: dict[str, Any]) -> dict[str, Any]:
+    normalized = copy.deepcopy(candidate)
+    if isinstance(normalized.get("adapters"), list):
+        normalized["adapters"].sort(key=identity_item_id)
+    if isinstance(normalized.get("nonclaims"), list):
+        normalized["nonclaims"].sort()
+    evidence = normalized.get("evidence")
+    if isinstance(evidence, dict):
+        for binding in evidence.values():
+            if isinstance(binding, dict):
+                for field in ("commands", "artifacts"):
+                    if isinstance(binding.get(field), list):
+                        binding[field].sort()
+    return normalized
+
+
 def evaluator_identity() -> dict[str, str]:
     script = Path(__file__).resolve()
-    skill = script.parent.parent / "SKILL.md"
+    skill_root = script.parent.parent
+    skill = skill_root / "SKILL.md"
     try:
         script_sha256 = hashlib.sha256(script.read_bytes()).hexdigest()
         skill_sha256 = hashlib.sha256(skill.read_bytes()).hexdigest()
+        procedure_files = [skill, *sorted((skill_root / "references").glob("*.md"))]
+        procedure_manifest = [
+            {
+                "path": path.relative_to(skill_root).as_posix(),
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            }
+            for path in procedure_files
+        ]
     except OSError as exc:
         raise InputError("identity_failed", str(exc), str(exc.filename)) from exc
     return {
         "evaluator_sha256": script_sha256,
         "skill_sha256": skill_sha256,
+        "procedure_manifest_sha256": canonical_sha256(procedure_manifest),
     }
+
+
+def candidate_semantics_projection(
+    graph: dict[str, Any], candidate: dict[str, Any]
+) -> dict[str, Any]:
+    decision = graph["decision"]
+    return {
+        "schema_version": SCHEMA_VERSION,
+        # Evidence is deliberately invalidated by any change to the declared
+        # seam model, not only by a changed assignment. This is conservative:
+        # objective-only edits also require fresh evidence, but an imported or
+        # hand-authored topology can never replay receipts from a different
+        # graph while preserving the candidate-semantics identity.
+        "graph_sha256": canonical_sha256(normalized_graph_identity(graph)),
+        "source_identity": decision["source_identity"],
+        "protected_observations": sorted(
+            decision["protected_observations"], key=identity_item_id
+        ),
+        "semantic_constraints": sorted(
+            graph.get("semantic_constraints", []), key=identity_item_id
+        ),
+        "assignments": candidate.get("assignments", {}),
+        "replacements": candidate.get("replacements", {}),
+        "adapters": sorted(candidate.get("adapters", []), key=identity_item_id),
+    }
+
+
+def candidate_semantics_sha256(graph: dict[str, Any], candidate: dict[str, Any]) -> str:
+    return canonical_sha256(candidate_semantics_projection(graph, candidate))
 
 
 def input_identity(graph: dict[str, Any], candidate: dict[str, Any]) -> dict[str, str]:
     return {
-        "graph_sha256": canonical_sha256(graph),
-        "candidate_sha256": canonical_sha256(candidate),
+        "graph_sha256": canonical_sha256(normalized_graph_identity(graph)),
+        "candidate_sha256": canonical_sha256(normalized_candidate_identity(candidate)),
+        "candidate_semantics_sha256": candidate_semantics_sha256(graph, candidate),
         **evaluator_identity(),
     }
 
@@ -158,22 +284,47 @@ def require_version(document: dict[str, Any], name: str) -> None:
         )
 
 
-def number(value: Any, path: str, default: float = 0.0) -> float:
+def exact_number(
+    value: Any,
+    path: str,
+    default: int | Fraction = 0,
+    *,
+    allow_negative: bool = False,
+) -> Fraction:
     if value is None:
-        return default
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return Fraction(default)
+    if isinstance(value, bool) or not isinstance(
+        value, (int, float, Decimal, Fraction)
+    ):
         raise InputError(
             "invalid_number", "expected a finite non-negative number", path
         )
-    result = float(value)
-    if not math.isfinite(result) or result < 0:
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise InputError(
+                "invalid_number", "expected a finite non-negative number", path
+            )
+        result = Fraction(Decimal(str(value)))
+    elif isinstance(value, Decimal):
+        if not value.is_finite():
+            raise InputError(
+                "invalid_number", "expected a finite non-negative number", path
+            )
+        result = Fraction(value)
+    else:
+        result = Fraction(value)
+    if not allow_negative and result < 0:
         raise InputError(
             "invalid_number", "expected a finite non-negative number", path
         )
     return result
 
 
-def probability(value: Any, path: str) -> float:
+def number(value: Any, path: str, default: int | Fraction = 0) -> Fraction:
+    return exact_number(value, path, default)
+
+
+def probability(value: Any, path: str) -> Fraction:
     result = number(value, path)
     if result > 1:
         raise InputError("invalid_probability", "expected a number from 0 to 1", path)
@@ -200,6 +351,12 @@ def nonempty_string(value: Any, path: str) -> str:
     return value
 
 
+def same_public_label(left: str, right: str) -> bool:
+    """Compare non-secret architecture labels without secret-comparison ambiguity."""
+
+    return left == right
+
+
 def sha256_string(value: Any, path: str) -> str:
     result = nonempty_string(value, path)
     if len(result) != 64 or any(
@@ -211,6 +368,106 @@ def sha256_string(value: Any, path: str) -> str:
             path,
         )
     return result
+
+
+def validate_source_identity(value: Any, path: str) -> None:
+    if not isinstance(value, dict):
+        raise InputError(
+            "invalid_source_identity",
+            "source_identity must be a content-bound object",
+            path,
+        )
+    reject_unknown_fields(
+        value,
+        {
+            "kind",
+            "repository",
+            "revision",
+            "tree_sha256",
+            "working_tree_state",
+            "dirty_patch_sha256",
+        },
+        path,
+    )
+    required_fields = {
+        "kind",
+        "repository",
+        "revision",
+        "tree_sha256",
+        "working_tree_state",
+        "dirty_patch_sha256",
+    }
+    missing_fields = sorted(required_fields - value.keys())
+    if missing_fields:
+        raise InputError(
+            "incomplete_source_identity",
+            f"source_identity is missing required fields: {missing_fields}",
+            path,
+        )
+    if value.get("kind") not in {"git_tree", "content_manifest"}:
+        raise InputError(
+            "invalid_source_identity_kind",
+            "source_identity.kind must be git_tree or content_manifest",
+            f"{path}.kind",
+        )
+    nonempty_string(value.get("repository"), f"{path}.repository")
+    nonempty_string(value.get("revision"), f"{path}.revision")
+    sha256_string(value.get("tree_sha256"), f"{path}.tree_sha256")
+    working_tree_state = value.get("working_tree_state")
+    kind = value.get("kind")
+    allowed_states = {"clean", "dirty"} if kind == "git_tree" else {"not_applicable"}
+    if working_tree_state not in allowed_states:
+        raise InputError(
+            "invalid_working_tree_state",
+            f"working_tree_state must be one of {sorted(allowed_states)} for {kind}",
+            f"{path}.working_tree_state",
+        )
+    dirty_patch = value.get("dirty_patch_sha256")
+    if working_tree_state == "dirty":
+        sha256_string(dirty_patch, f"{path}.dirty_patch_sha256")
+    elif dirty_patch is not None:
+        raise InputError(
+            "unexpected_dirty_patch",
+            "dirty_patch_sha256 must be null unless working_tree_state is dirty",
+            f"{path}.dirty_patch_sha256",
+        )
+
+
+def validate_protected_observations(value: Any, path: str) -> list[str]:
+    if not isinstance(value, list) or not value:
+        raise InputError(
+            "invalid_protected_observations",
+            "protected_observations must be a non-empty list",
+            path,
+        )
+    observation_ids: list[str] = []
+    for index, observation in enumerate(value):
+        item_path = f"{path}[{index}]"
+        if not isinstance(observation, dict):
+            raise InputError(
+                "invalid_protected_observation",
+                "protected observation must be an object",
+                item_path,
+            )
+        reject_unknown_fields(
+            observation,
+            {"id", "manifest_sha256"},
+            item_path,
+        )
+        observation_ids.append(
+            nonempty_string(observation.get("id"), f"{item_path}.id")
+        )
+        sha256_string(
+            observation.get("manifest_sha256"),
+            f"{item_path}.manifest_sha256",
+        )
+    if len(set(observation_ids)) != len(observation_ids):
+        raise InputError(
+            "duplicate_protected_observation",
+            "protected observation IDs must be unique",
+            path,
+        )
+    return observation_ids
 
 
 def validate_decision(graph: dict[str, Any]) -> None:
@@ -238,15 +495,22 @@ def validate_decision(graph: dict[str, Any]) -> None:
         "id",
         "consumer",
         "retirement_condition",
-        "source_identity",
-        "selection_rule",
     ):
         nonempty_string(decision.get(field), f"graph.decision.{field}")
-    string_list(
+    validate_source_identity(
+        decision.get("source_identity"),
+        "graph.decision.source_identity",
+    )
+    validate_protected_observations(
         decision.get("protected_observations"),
         "graph.decision.protected_observations",
-        nonempty=True,
     )
+    if decision.get("selection_rule") != "pareto_after_hard_feasibility":
+        raise InputError(
+            "unsupported_selection_rule",
+            "selection_rule must be 'pareto_after_hard_feasibility'; decision-level lexicographic or epsilon policies belong in Semantic Architecture",
+            "graph.decision.selection_rule",
+        )
     receipts = decision.get("prior_decision_receipts")
     if not isinstance(receipts, list):
         raise InputError(
@@ -424,6 +688,7 @@ def build_model(graph: dict[str, Any], candidate: dict[str, Any]) -> Model:
         {
             "schema_version",
             "decision",
+            "change_model",
             "module_overhead_bits",
             "semantic_steps",
             "vertices",
@@ -449,6 +714,12 @@ def build_model(graph: dict[str, Any], candidate: dict[str, Any]) -> Model:
         "candidate",
     )
     validate_decision(graph)
+    if graph.get("change_model") != "independent_bernoulli":
+        raise InputError(
+            "unsupported_change_model",
+            "graph.change_model must explicitly equal 'independent_bernoulli'",
+            "graph.change_model",
+        )
     nonempty_string(candidate.get("id"), "candidate.id")
     nonempty_string(candidate.get("subject_identity"), "candidate.subject_identity")
     string_list(graph.get("nonclaims"), "graph.nonclaims", nonempty=True)
@@ -486,6 +757,13 @@ def build_model(graph: dict[str, Any], candidate: dict[str, Any]) -> Model:
         raise InputError(
             "unknown_assignment",
             f"assignments contain unknown vertices: {unknown}",
+            "candidate.assignments",
+        )
+    inactive = sorted(set(assignments) - set(active))
+    if inactive:
+        raise InputError(
+            "inactive_assignment",
+            f"assignments contain replaced, inactive representatives: {inactive}",
             "candidate.assignments",
         )
     return Model(graph, candidate, vertices, representatives, normalized, active)
@@ -587,9 +865,7 @@ def validate_hyperedges(model: Model) -> list[dict[str, Any]]:
             "boundary_information_bits",
             "boundary_memory_bytes",
         ):
-            number(
-                edge.get(field), f"{path}.{field}", 1.0 if field == "weight" else 0.0
-            )
+            number(edge.get(field), f"{path}.{field}", 1 if field == "weight" else 0)
         policy = edge.get("cut_policy", "allow")
         if policy not in ("allow", "forbid"):
             raise InputError(
@@ -614,9 +890,11 @@ def validate_evidence_binding(
     *,
     semantic_id: str,
     subject_identity: str,
+    candidate_semantics_identity: str,
+    required_evidence_kind: str,
     required_closure: str,
-    negative_control_id: str,
-) -> tuple[str, str]:
+    negative_control_id: str | None,
+) -> tuple[str, str, str | None, str | None]:
     if not isinstance(value, dict):
         raise InputError(
             "invalid_evidence_binding",
@@ -628,6 +906,8 @@ def validate_evidence_binding(
         {
             "semantic_constraint_id",
             "subject_identity",
+            "candidate_semantics_sha256",
+            "kind",
             "claim_id",
             "closure",
             "status",
@@ -635,6 +915,7 @@ def validate_evidence_binding(
             "receipt_sha256",
             "evaluator_sha256",
             "skill_sha256",
+            "procedure_manifest_sha256",
             "commands",
             "artifacts",
             "negative_control",
@@ -652,6 +933,18 @@ def validate_evidence_binding(
             "evidence_subject_mismatch",
             "evidence subject_identity must equal candidate.subject_identity",
             f"{path}.subject_identity",
+        )
+    if value.get("candidate_semantics_sha256") != candidate_semantics_identity:
+        raise InputError(
+            "evidence_candidate_semantics_mismatch",
+            "evidence must bind the exact candidate semantics SHA-256",
+            f"{path}.candidate_semantics_sha256",
+        )
+    if value.get("kind") != required_evidence_kind:
+        raise InputError(
+            "evidence_kind_mismatch",
+            f"evidence kind must equal {required_evidence_kind!r}",
+            f"{path}.kind",
         )
     claim_id = nonempty_string(value.get("claim_id"), f"{path}.claim_id")
     closure = nonempty_string(value.get("closure"), f"{path}.closure")
@@ -678,6 +971,7 @@ def validate_evidence_binding(
         "receipt_sha256",
         "evaluator_sha256",
         "skill_sha256",
+        "procedure_manifest_sha256",
     ):
         sha256_string(value.get(field), f"{path}.{field}")
     commands = string_list(value.get("commands"), f"{path}.commands")
@@ -688,6 +982,21 @@ def validate_evidence_binding(
             "evidence needs at least one command or artifact",
             path,
         )
+    if required_evidence_kind == "checked_certificate":
+        if not artifacts:
+            raise InputError(
+                "certificate_without_artifact",
+                "checked_certificate evidence needs at least one artifact",
+                f"{path}.artifacts",
+            )
+        if "negative_control" in value:
+            raise InputError(
+                "certificate_with_negative_control",
+                "checked_certificate evidence must not manufacture an empirical negative control",
+                f"{path}.negative_control",
+            )
+        return claim_id, value["receipt_sha256"], None, None
+
     control = value.get("negative_control")
     control_path = f"{path}.negative_control"
     if not isinstance(control, dict):
@@ -724,7 +1033,7 @@ def validate_evidence_binding(
             "negative control receipt must differ from the positive claim receipt",
             f"{control_path}.receipt_sha256",
         )
-    return claim_id, control_id
+    return claim_id, value["receipt_sha256"], control_id, control_receipt
 
 
 def constraint_violations(
@@ -748,9 +1057,7 @@ def constraint_violations(
                     f"vertex.{vertex_id}.pinned_module",
                 )
             actual = model.assignments[representative]
-            if (
-                actual != pinned
-            ):  # ubs:ignore — module labels are public architecture data, not secrets.
+            if not same_public_label(actual, pinned):
                 add(
                     "pin_violated",
                     vertex_id,
@@ -903,8 +1210,15 @@ def constraint_violations(
     proof_deficit = 0
     seen_semantic: set[str] = set()
     seen_claims: set[str] = set()
+    seen_claim_receipts: set[str] = set()
     seen_controls: set[str] = set()
+    seen_control_receipts: set[str] = set()
     declared_controls: set[str] = set()
+    required_observations: set[str] = set()
+    protected_observations = {
+        item["id"] for item in model.graph["decision"]["protected_observations"]
+    }
+    semantics_identity = candidate_semantics_sha256(model.graph, model.candidate)
     for index, item in enumerate(required):
         path = f"graph.semantic_constraints[{index}]"
         if (
@@ -923,6 +1237,7 @@ def constraint_violations(
                 "id",
                 "required",
                 "observation",
+                "evidence_kind",
                 "required_closure",
                 "negative_control_id",
             },
@@ -937,7 +1252,7 @@ def constraint_violations(
             )
         seen_semantic.add(semantic_id)
         observation = nonempty_string(item.get("observation"), f"{path}.observation")
-        if observation not in model.graph["decision"]["protected_observations"]:
+        if observation not in protected_observations:
             raise InputError(
                 "unknown_protected_observation",
                 f"semantic constraint references undeclared observation {observation!r}",
@@ -953,17 +1268,32 @@ def constraint_violations(
                 f"required_closure must be one of {sorted(ALLOWED_CLOSURES)}",
                 f"{path}.required_closure",
             )
-        negative_control_id = nonempty_string(
-            item.get("negative_control_id"),
-            f"{path}.negative_control_id",
-        )
-        if negative_control_id in declared_controls:
+        evidence_kind = item.get("evidence_kind")
+        if evidence_kind not in {"executed_observation", "checked_certificate"}:
             raise InputError(
-                "shared_negative_control",
-                f"negative control {negative_control_id!r} is declared by multiple semantic constraints",
+                "invalid_evidence_kind",
+                "evidence_kind must be executed_observation or checked_certificate",
+                f"{path}.evidence_kind",
+            )
+        negative_control_id: str | None = None
+        if evidence_kind == "executed_observation":
+            negative_control_id = nonempty_string(
+                item.get("negative_control_id"),
                 f"{path}.negative_control_id",
             )
-        declared_controls.add(negative_control_id)
+            if negative_control_id in declared_controls:
+                raise InputError(
+                    "shared_negative_control",
+                    f"negative control {negative_control_id!r} is declared by multiple semantic constraints",
+                    f"{path}.negative_control_id",
+                )
+            declared_controls.add(negative_control_id)
+        elif "negative_control_id" in item:
+            raise InputError(
+                "certificate_with_negative_control",
+                "checked_certificate constraints must not declare a negative_control_id",
+                f"{path}.negative_control_id",
+            )
         required_item = item.get("required", True)
         if not isinstance(required_item, bool):
             raise InputError(
@@ -971,23 +1301,33 @@ def constraint_violations(
                 "required must be a boolean",
                 f"{path}.required",
             )
+        if required_item:
+            required_observations.add(observation)
         binding = evidence.get(semantic_id)
         if required_item and binding is None:
             proof_deficit += 1
             add(
                 "evidence_missing",
                 semantic_id,
-                "needs an accepted identity-bound claim and passing strict negative control",
+                (
+                    "needs an accepted identity-bound claim and passing strict negative control"
+                    if evidence_kind == "executed_observation"
+                    else "needs an accepted identity-bound checked certificate artifact"
+                ),
             )
             continue
         if binding is not None:
-            claim_id, control_id = validate_evidence_binding(
-                binding,
-                f"candidate.evidence.{semantic_id}",
-                semantic_id=semantic_id,
-                subject_identity=model.candidate["subject_identity"],
-                required_closure=required_closure,
-                negative_control_id=negative_control_id,
+            claim_id, claim_receipt, control_id, control_receipt = (
+                validate_evidence_binding(
+                    binding,
+                    f"candidate.evidence.{semantic_id}",
+                    semantic_id=semantic_id,
+                    subject_identity=model.candidate["subject_identity"],
+                    candidate_semantics_identity=semantics_identity,
+                    required_evidence_kind=evidence_kind,
+                    required_closure=required_closure,
+                    negative_control_id=negative_control_id,
+                )
             )
             if claim_id in seen_claims:
                 raise InputError(
@@ -995,14 +1335,44 @@ def constraint_violations(
                     f"claim {claim_id!r} is shared across semantic constraints",
                     f"candidate.evidence.{semantic_id}.claim_id",
                 )
-            if control_id in seen_controls:
+            if claim_receipt in seen_claim_receipts:
+                raise InputError(
+                    "shared_claim_receipt",
+                    f"claim receipt {claim_receipt!r} is shared across semantic constraints",
+                    f"candidate.evidence.{semantic_id}.receipt_sha256",
+                )
+            if control_id is not None and control_id in seen_controls:
                 raise InputError(
                     "shared_negative_control",
                     f"negative control {control_id!r} is shared across semantic constraints",
                     f"candidate.evidence.{semantic_id}.negative_control.id",
                 )
+            if control_receipt is not None and control_receipt in seen_control_receipts:
+                raise InputError(
+                    "shared_negative_control_receipt",
+                    f"control receipt {control_receipt!r} is shared across semantic constraints",
+                    f"candidate.evidence.{semantic_id}.negative_control.receipt_sha256",
+                )
             seen_claims.add(claim_id)
-            seen_controls.add(control_id)
+            seen_claim_receipts.add(claim_receipt)
+            if control_id is not None:
+                seen_controls.add(control_id)
+            if control_receipt is not None:
+                seen_control_receipts.add(control_receipt)
+    for observation in sorted(protected_observations - required_observations):
+        proof_deficit += 1
+        add(
+            "uncovered_protected_observation",
+            observation,
+            "protected observation needs at least one required semantic constraint",
+        )
+    reused_receipts = sorted(seen_claim_receipts & seen_control_receipts)
+    if reused_receipts:
+        raise InputError(
+            "claim_control_receipt_reuse",
+            f"claim and negative-control receipts must be globally disjoint: {reused_receipts}",
+            "candidate.evidence",
+        )
     orphan_evidence = sorted(set(evidence) - seen_semantic)
     if orphan_evidence:
         raise InputError(
@@ -1027,7 +1397,11 @@ def constraint_violations(
             or not adapter["id"]
         ):
             raise InputError("invalid_adapter", "adapter needs a non-empty id", path)
-        reject_unknown_fields(adapter, {"id", "cost", "removal_condition"}, path)
+        reject_unknown_fields(
+            adapter,
+            {"id", "implementation_sha256", "cost", "removal_condition"},
+            path,
+        )
         if adapter["id"] in seen_adapters:
             raise InputError(
                 "duplicate_adapter",
@@ -1035,6 +1409,10 @@ def constraint_violations(
                 f"{path}.id",
             )
         seen_adapters.add(adapter["id"])
+        sha256_string(
+            adapter.get("implementation_sha256"),
+            f"{path}.implementation_sha256",
+        )
         removal = adapter.get("removal_condition")
         if not isinstance(removal, str) or not removal.strip():
             add(
@@ -1054,8 +1432,9 @@ def score_model(model: Model) -> dict[str, Any]:
         model.graph.get("module_overhead_bits"), "graph.module_overhead_bits"
     )
     semantic_steps = number(model.graph.get("semantic_steps"), "graph.semantic_steps")
-    objectives = {name: 0.0 for name in OBJECTIVE_NAMES}
-    objectives["proof_deficit"] = float(proof_deficit)
+    objectives = {name: Fraction(0) for name in OBJECTIVE_NAMES}
+    diagnostics = {name: 0 for name in DIAGNOSTIC_NAMES}
+    diagnostics["proof_deficit"] = proof_deficit
 
     authority_groups: dict[str, set[str]] = {}
     for vertex_id, vertex in model.vertices.items():
@@ -1064,11 +1443,9 @@ def score_model(model: Model) -> dict[str, Any]:
             authority_groups.setdefault(key, set()).add(
                 model.representatives[vertex_id]
             )
-    objectives["duplicate_authority"] = float(
-        sum(
-            max(0, len(representatives) - 1)
-            for representatives in authority_groups.values()
-        )
+    diagnostics["duplicate_authority"] = sum(
+        max(0, len(representatives) - 1)
+        for representatives in authority_groups.values()
     )
 
     objectives["mdl_bits"] = module_overhead * len(modules)
@@ -1090,29 +1467,25 @@ def score_model(model: Model) -> dict[str, Any]:
     for vertex_id, vertex in model.vertices.items():
         representative = model.representatives[vertex_id]
         current = vertex.get("current_module")
-        changed = (
-            representative != vertex_id
-            or (
-                isinstance(current, str)
-                and current
-                and model.assignments[representative]
-                != current  # ubs:ignore — module labels are public architecture data, not secrets.
-            )
+        changed = representative != vertex_id or (
+            isinstance(current, str)
+            and current
+            and not same_public_label(model.assignments[representative], current)
         )
         if changed:
             objectives["migration_cost"] += number(
-                vertex.get("move_cost"), f"vertex.{vertex_id}.move_cost", 1.0
+                vertex.get("move_cost"), f"vertex.{vertex_id}.move_cost", 1
             )
             if vertex.get("public_contract", False):
                 objectives["contract_churn"] += number(
                     vertex.get("contract_churn_cost"),
                     f"vertex.{vertex_id}.contract_churn_cost",
-                    1.0,
+                    1,
                 )
 
     for adapter in model.candidate.get("adapters", []):
         objectives["migration_cost"] += number(
-            adapter.get("cost"), f"adapter.{adapter.get('id')}.cost", 1.0
+            adapter.get("cost"), f"adapter.{adapter.get('id')}.cost", 1
         )
 
     cuts: list[dict[str, Any]] = []
@@ -1121,7 +1494,7 @@ def score_model(model: Model) -> dict[str, Any]:
         edge_modules = sorted({model.assignments[vertex_id] for vertex_id in resolved})
         span = len(edge_modules)
         crossings = max(0, span - 1)
-        weight = number(edge.get("weight"), f"edge.{edge['id']}.weight", 1.0)
+        weight = number(edge.get("weight"), f"edge.{edge['id']}.weight", 1)
         frequency = number(edge.get("frequency"), f"edge.{edge['id']}.frequency")
         volume = number(edge.get("volume"), f"edge.{edge['id']}.volume")
         runtime_cost = number(
@@ -1138,7 +1511,7 @@ def score_model(model: Model) -> dict[str, Any]:
             edge.get("boundary_memory_bytes"),
             f"edge.{edge['id']}.boundary_memory_bytes",
         )
-        cut_factor = float(crossings)
+        cut_factor = Fraction(crossings)
 
         if crossings:
             objectives["mdl_bits"] += protocol_bits * cut_factor
@@ -1153,19 +1526,21 @@ def score_model(model: Model) -> dict[str, Any]:
                 "sync",
             }:
                 objectives["mutable_cut"] += (
-                    weight * frequency * max(volume, 1.0) * cut_factor
+                    weight * frequency * max(volume, Fraction(1)) * cut_factor
                 )
             if edge.get("ordered", False):
-                objectives["ordered_cut"] += weight * max(frequency, 1.0) * cut_factor
+                objectives["ordered_cut"] += (
+                    weight * max(frequency, Fraction(1)) * cut_factor
+                )
             if edge["kind"] == "sync":
                 objectives["sync_work"] += (
-                    weight * frequency * max(volume, 1.0) * cut_factor
+                    weight * frequency * max(volume, Fraction(1)) * cut_factor
                 )
 
         penalty_mode = edge.get("penalty_mode", "cut")
         penalty_active = crossings > 0 if penalty_mode == "cut" else span == 1
         if penalty_active and edge["kind"] in {"cochange", "edit_collision"}:
-            objectives["edit_contention"] += weight * max(frequency, 1.0)
+            objectives["edit_contention"] += weight * max(frequency, Fraction(1))
 
         if crossings:
             cuts.append(
@@ -1174,6 +1549,14 @@ def score_model(model: Model) -> dict[str, Any]:
                     "kind": edge["kind"],
                     "modules": edge_modules,
                     "resolved_members": resolved,
+                    "tails": edge.get("tails", []),
+                    "heads": edge.get("heads", []),
+                    "resolved_tails": sorted(
+                        {model.representatives[item] for item in edge.get("tails", [])}
+                    ),
+                    "resolved_heads": sorted(
+                        {model.representatives[item] for item in edge.get("heads", [])}
+                    ),
                     "crossings": crossings,
                     "cut_policy": edge.get("cut_policy", "allow"),
                 }
@@ -1193,16 +1576,29 @@ def score_model(model: Model) -> dict[str, Any]:
             number(v.get("compile_cost_ms"), f"module.{module}.compile_cost_ms")
             for v in vertices
         )
-        no_change_probability = 1.0
+        no_change_probability = Fraction(1)
         for vertex in vertices:
-            no_change_probability *= 1.0 - probability(
+            no_change_probability *= Fraction(1) - probability(
                 vertex.get("change_probability"), f"module.{module}.change_probability"
             )
         objectives["expected_rebuild_ms"] += compile_cost * (
-            1.0 - no_change_probability
+            Fraction(1) - no_change_probability
         )
 
-    cleaned = {name: clean_number(objectives[name]) for name in OBJECTIVE_NAMES}
+    cleaned = {name: display_number(objectives[name]) for name in OBJECTIVE_NAMES}
+    objective_rationals = {
+        name: rational_string(objectives[name]) for name in OBJECTIVE_NAMES
+    }
+    evidence_violations = [
+        violation
+        for violation in violations
+        if violation["code"] in EVIDENCE_VIOLATION_CODES
+    ]
+    structural_violations = [
+        violation
+        for violation in violations
+        if violation["code"] not in EVIDENCE_VIOLATION_CODES
+    ]
     return {
         "schema_version": SCHEMA_VERSION,
         "tool_version": TOOL_VERSION,
@@ -1212,8 +1608,14 @@ def score_model(model: Model) -> dict[str, Any]:
         "candidate_id": model.candidate["id"],
         "input_identity": input_identity(model.graph, model.candidate),
         "feasible": not violations,
+        "structurally_feasible": not structural_violations,
+        "evidence_accepted": not evidence_violations,
         "violations": violations,
+        "structural_violations": structural_violations,
+        "evidence_violations": evidence_violations,
         "objectives": cleaned,
+        "objective_rationals": objective_rationals,
+        "diagnostics": diagnostics,
         "modules": modules,
         "active_representatives": list(model.active),
         "resolved_partition": {
@@ -1227,19 +1629,32 @@ def score_model(model: Model) -> dict[str, Any]:
         "cuts": sorted(cuts, key=lambda item: item["edge"]),
         "limitations": [
             "Evidence identity, closure, ownership, and strict-control shape are checked; receipt truth and physical execution are not proved.",
-            "Objective values are meaningful only under the supplied units, scope, and coding scheme.",
+            "objective_rationals is the authoritative exact arithmetic surface; objectives is a presentation projection.",
+            "Expected rebuild cost assumes the explicitly declared independent_bernoulli change model.",
+            "Objective values are meaningful only under the supplied units, scope, coding scheme, and independence model.",
         ],
     }
 
 
-def clean_number(value: float) -> int | float:
-    if abs(value - round(value)) < 1e-9:
-        return round(value)
-    return round(value, 9)
+def rational_string(value: Fraction) -> str:
+    if value.denominator == 1:
+        return str(value.numerator)
+    return f"{value.numerator}/{value.denominator}"
 
 
-def vector(result: dict[str, Any]) -> tuple[float, ...]:
-    return tuple(float(result["objectives"][name]) for name in OBJECTIVE_NAMES)
+def display_number(value: Fraction) -> int | float | str:
+    if value.denominator == 1:
+        return value.numerator
+    approximate = float(value)
+    if math.isfinite(approximate):
+        return approximate
+    return rational_string(value)
+
+
+def vector(result: dict[str, Any]) -> tuple[Fraction, ...]:
+    return tuple(
+        Fraction(result["objective_rationals"][name]) for name in OBJECTIVE_NAMES
+    )
 
 
 def dominates(left: dict[str, Any], right: dict[str, Any]) -> bool:
@@ -1256,42 +1671,51 @@ def enumerate_moves(model: Model, limit: int) -> dict[str, Any]:
     for vertex_id in model.active:
         old_module = model.assignments[vertex_id]
         for module in modules:
-            if (
-                module == old_module
-            ):  # ubs:ignore — module labels are public architecture data, not secrets.
+            if same_public_label(module, old_module):
                 continue
             considered += 1
             candidate = copy.deepcopy(model.candidate)
             candidate["assignments"][vertex_id] = module
+            candidate["evidence"] = {}
             moved_model = build_model(model.graph, candidate)
             result = score_model(moved_model)
-            if not result["feasible"] or dominates(baseline, result):
+            if not result["structurally_feasible"] or dominates(baseline, result):
                 continue
             candidates.append(
                 {
                     "move": {"vertex": vertex_id, "from": old_module, "to": module},
                     "candidate_sha256": result["input_identity"]["candidate_sha256"],
+                    "candidate_semantics_sha256": result["input_identity"][
+                        "candidate_semantics_sha256"
+                    ],
+                    "evidence_status": "accepted"
+                    if result["evidence_accepted"]
+                    else "pending",
                     "relation_to_baseline": "dominates"
                     if dominates(result, baseline)
                     else "tradeoff",
                     "objectives": result["objectives"],
+                    "objective_rationals": result["objective_rationals"],
                     "cuts": result["cuts"],
                 }
             )
 
     frontier: list[dict[str, Any]] = []
     for index, candidate in enumerate(candidates):
-        wrapped = {"objectives": candidate["objectives"]}
+        wrapped = {"objective_rationals": candidate["objective_rationals"]}
         if any(
             index != other_index
-            and dominates({"objectives": other["objectives"]}, wrapped)
+            and dominates(
+                {"objective_rationals": other["objective_rationals"]},
+                wrapped,
+            )
             for other_index, other in enumerate(candidates)
         ):
             continue
         frontier.append(candidate)
     frontier.sort(
         key=lambda item: (
-            tuple(float(item["objectives"][name]) for name in OBJECTIVE_NAMES),
+            vector(item),
             item["move"]["vertex"],
             item["move"]["to"],
         )
@@ -1306,7 +1730,10 @@ def enumerate_moves(model: Model, limit: int) -> dict[str, Any]:
         "candidate_id": model.candidate["id"],
         "input_identity": baseline["input_identity"],
         "baseline_feasible": baseline["feasible"],
+        "baseline_structurally_feasible": baseline["structurally_feasible"],
+        "baseline_evidence_accepted": baseline["evidence_accepted"],
         "baseline_objectives": baseline["objectives"],
+        "baseline_objective_rationals": baseline["objective_rationals"],
         "generator": {
             "kind": "single_representative_existing_module",
             "candidates_considered": considered,
@@ -1318,12 +1745,13 @@ def enumerate_moves(model: Model, limit: int) -> dict[str, Any]:
         "limitations": [
             "Only one active representative is moved at a time.",
             "No replacement, adapter, new-module, or semantic rewiring move is synthesized.",
-            "Frontier membership is exhaustive only for the declared single-move generator.",
+            "Generated moves deliberately discard baseline evidence and are marked pending; they are a conservative structural superset, not accepted semantic candidates.",
+            "Frontier membership is exhaustive only for the declared structural single-move generator.",
         ],
     }
 
 
-def evaluate_fixed_point(
+def evaluate_stationarity(
     model: Model,
     prior_state_sha256: str | None,
 ) -> dict[str, Any]:
@@ -1335,7 +1763,10 @@ def evaluate_fixed_point(
         "candidate_id": moves["candidate_id"],
         "input_identity": moves["input_identity"],
         "baseline_feasible": moves["baseline_feasible"],
+        "baseline_structurally_feasible": moves["baseline_structurally_feasible"],
+        "baseline_evidence_accepted": moves["baseline_evidence_accepted"],
         "baseline_objectives": moves["baseline_objectives"],
+        "baseline_objective_rationals": moves["baseline_objective_rationals"],
         "generator": moves["generator"],
         "frontier": moves["frontier"],
         "frontier_total": moves["frontier_total"],
@@ -1348,27 +1779,37 @@ def evaluate_fixed_point(
         for candidate in moves["frontier"]
         if candidate["relation_to_baseline"] == "dominates"
     ]
-    if not moves["baseline_feasible"]:
-        status = "blocked_infeasible"
+    if not moves["baseline_structurally_feasible"]:
+        status = "blocked_structurally_infeasible"
+    elif not moves["baseline_evidence_accepted"]:
+        status = "blocked_evidence"
     elif dominating:
-        status = "open_dominating_candidate"
+        status = "open_structural_dominator_pending_evidence"
     elif prior_state_sha256 is None:
-        status = "open"
+        status = "bounded_single_move_pareto_stationary"
     elif prior_state_sha256 != state_sha256:
         status = "state_changed"
     else:
-        status = "bounded_single_move_fixed_point"
+        status = "bounded_single_move_pareto_stationary_confirmed"
+    pareto_stationary = status in {
+        "bounded_single_move_pareto_stationary",
+        "bounded_single_move_pareto_stationary_confirmed",
+    }
     return {
         "schema_version": SCHEMA_VERSION,
         "tool_version": TOOL_VERSION,
         "command": "converge",
         "ok": True,
         "status": status,
-        "fixed_point": status == "bounded_single_move_fixed_point",
+        "pareto_stationary": pareto_stationary,
+        "idempotently_confirmed": (
+            status == "bounded_single_move_pareto_stationary_confirmed"
+        ),
         "state_sha256": state_sha256,
         "prior_state_sha256": prior_state_sha256,
         "baseline_feasible": moves["baseline_feasible"],
         "baseline_objectives": moves["baseline_objectives"],
+        "baseline_objective_rationals": moves["baseline_objective_rationals"],
         "generator": moves["generator"],
         "dominating_candidates": dominating,
         "tradeoff_frontier_total": sum(
@@ -1377,25 +1818,34 @@ def evaluate_fixed_point(
         ),
         "input_identity": moves["input_identity"],
         "limitations": [
-            "The fixed point is exact only for one active representative moved among already-declared modules.",
+            "Pareto stationarity is exact only for one active representative moved among already-declared modules under the declared exact rational objective model.",
             "It does not exhaust replacements, adapters, new modules, rewiring, source-model discovery, or multi-move paths.",
-            "A second unchanged evaluation proves evaluator-state stability, not that an external discovery sweep occurred.",
+            "Generated neighboring moves are structurally evaluated with evidence pending; their baseline evidence is never reused.",
+            "An unchanged second evaluation is only idempotent confirmation; campaign fixed points and retirement belong to Semantic Architecture.",
         ],
     }
 
 
 def self_test_documents() -> tuple[dict[str, Any], dict[str, Any]]:
     graph = {
-        "schema_version": 2,
+        "schema_version": 3,
         "decision": {
             "id": "self-test-seam",
             "consumer": "self-test",
             "retirement_condition": "score one lawful fold and its local frontier",
-            "source_identity": "self-test-source",
-            "protected_observations": ["trace"],
-            "selection_rule": "Pareto order after hard feasibility",
+            "source_identity": {
+                "kind": "content_manifest",
+                "repository": "self-test",
+                "revision": "self-test-source",
+                "tree_sha256": "1" * 64,
+                "working_tree_state": "not_applicable",
+                "dirty_patch_sha256": None,
+            },
+            "protected_observations": [{"id": "trace", "manifest_sha256": "2" * 64}],
+            "selection_rule": "pareto_after_hard_feasibility",
             "prior_decision_receipts": [],
         },
+        "change_model": "independent_bernoulli",
         "module_overhead_bits": 5,
         "semantic_steps": 10,
         "vertices": [
@@ -1451,6 +1901,7 @@ def self_test_documents() -> tuple[dict[str, Any], dict[str, Any]]:
                 "id": "trace",
                 "required": True,
                 "observation": "trace",
+                "evidence_kind": "executed_observation",
                 "required_closure": "complete_for_declared_corpus",
                 "negative_control_id": "trace-mutant",
             }
@@ -1458,7 +1909,7 @@ def self_test_documents() -> tuple[dict[str, Any], dict[str, Any]]:
         "nonclaims": ["self-test evidence does not prove source-program equivalence"],
     }
     candidate = {
-        "schema_version": 2,
+        "schema_version": 3,
         "id": "self-test-fold",
         "subject_identity": "self-test-candidate",
         "assignments": {"schedule": "core", "terrain": "core", "spell": "spell"},
@@ -1467,6 +1918,8 @@ def self_test_documents() -> tuple[dict[str, Any], dict[str, Any]]:
             "trace": {
                 "semantic_constraint_id": "trace",
                 "subject_identity": "self-test-candidate",
+                "candidate_semantics_sha256": "",
+                "kind": "executed_observation",
                 "claim_id": "self-test-trace-claim",
                 "closure": "complete_for_declared_corpus",
                 "status": "accepted",
@@ -1474,6 +1927,7 @@ def self_test_documents() -> tuple[dict[str, Any], dict[str, Any]]:
                 "receipt_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
                 "evaluator_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
                 "skill_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                "procedure_manifest_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
                 "commands": ["self-test"],
                 "artifacts": [],
                 "negative_control": {
@@ -1486,6 +1940,9 @@ def self_test_documents() -> tuple[dict[str, Any], dict[str, Any]]:
         "adapters": [],
         "nonclaims": ["self-test fold is bounded to the declared graph"],
     }
+    candidate["evidence"]["trace"]["candidate_semantics_sha256"] = (
+        candidate_semantics_sha256(graph, candidate)
+    )
     return graph, candidate
 
 
@@ -1498,7 +1955,7 @@ def self_test() -> dict[str, Any]:
     result = score_model(build_model(graph, candidate))
     check(result["feasible"], "valid representative fold must be feasible")
     check(
-        result["objectives"]["duplicate_authority"] == 0,
+        result["diagnostics"]["duplicate_authority"] == 0,
         "replacement must remove duplicate authority",
     )
     check(result["objectives"]["mutable_cut"] == 24, "mutable-cut score changed")
@@ -1509,16 +1966,21 @@ def self_test() -> dict[str, Any]:
     )
     check(result["objectives"]["mdl_bits"] == 62, "MDL score changed")
     check(
-        result["input_identity"]["graph_sha256"] == canonical_sha256(graph),
+        result["input_identity"]["graph_sha256"]
+        == canonical_sha256(normalized_graph_identity(graph)),
         "graph identity must bind canonical input",
     )
     check(
-        result["input_identity"]["candidate_sha256"] == canonical_sha256(candidate),
+        result["input_identity"]["candidate_sha256"]
+        == canonical_sha256(normalized_candidate_identity(candidate)),
         "candidate identity must bind canonical input",
     )
     bad = copy.deepcopy(candidate)
     bad["replacements"] = {}
     bad["assignments"]["terrain_copy"] = "spell"
+    bad["evidence"]["trace"]["candidate_semantics_sha256"] = candidate_semantics_sha256(
+        graph, bad
+    )
     bad_result = score_model(build_model(graph, bad))
     check(not bad_result["feasible"], "duplicate authority must be infeasible")
     check(
@@ -1594,7 +2056,7 @@ def main(argv: Iterable[str] | None = None) -> int:
                 prior = args.prior_state_sha256
                 if prior is not None:
                     sha256_string(prior, "--prior-state-sha256")
-                output = evaluate_fixed_point(model, prior)
+                output = evaluate_stationarity(model, prior)
             else:
                 output = score_model(model)
                 output["command"] = args.command

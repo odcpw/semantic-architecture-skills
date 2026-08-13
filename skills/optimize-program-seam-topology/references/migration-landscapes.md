@@ -200,7 +200,8 @@ a parallel workflow system for it.
 The positive and negative evidence must be separately identifiable and bound to
 the exact edge endpoints. A control cannot serve two claims. If a candidate
 node's source, evaluator, skill procedure, observation closure, or nonclaims
-change, its prior receipt and fixed-point state are stale.
+change, its prior receipt and local-stationarity state are stale. The enclosing
+campaign state and retirement decision remain Semantic Architecture concerns.
 
 ## 12. Parallel execution
 

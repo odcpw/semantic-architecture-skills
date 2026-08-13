@@ -18,8 +18,9 @@ Before parsing code, write a table:
 | latency | bounded | representative benchmark | pinned baseline | distribution regression |
 
 An empty workload set or absent oracle makes a later equivalence claim invalid.
-Also pin the decision ID, consumer, retirement condition, source/tree/dirty
-identity, evaluator/skill identity, and explicit nonclaims. A branch name,
+Also pin the decision ID, consumer, retirement condition, structured
+source/tree/dirty identity, each observation-manifest SHA-256, evaluator, skill,
+normative procedure-manifest identity, and explicit nonclaims. A branch name,
 human-readable revision label, or command string is not a content binding.
 
 ## 2. Choose semantic granularity

@@ -207,7 +207,6 @@ For feasible `C`, minimize a vector rather than a premature scalar:
 
 ```text
 f(C) = (
-  duplicate_authority,
   sync_work,
   mutable_cut,
   ordered_cut,
@@ -218,8 +217,7 @@ f(C) = (
   runtime_cost,
   memory_cost,
   expected_rebuild_cost,
-  migration_cost,
-  proof_deficit
+  migration_cost
 )
 ```
 
@@ -234,8 +232,8 @@ Every component needs a unit and an extraction route. Examples:
 - `runtime_cost`: measured latency/cycles/allocations caused by the boundary;
 - `expected_rebuild_cost`: observed invalidation probability times compile time;
 - `migration_cost`: touched semantic units, temporary adapters, and proof reruns;
-- `proof_deficit`: named constraints without adequate evidence, not raw test
-  count.
+- `duplicate_authority` and `proof_deficit` are hard-feasibility diagnostics,
+  not coordinates that a finite engineering improvement may trade away.
 
 Pareto dominance is:
 
@@ -246,6 +244,11 @@ C1 dominates C2 iff all f_i(C1) <= f_i(C2)
 
 A frontier exposes tradeoffs. Policy can then use priority levels or explicit
 bounds without hiding them in a coefficient soup.
+
+The deterministic evaluator compares exact rational coordinates; rounded
+display numbers never participate in dominance. Its rebuild estimator is
+defined only under the explicitly declared `independent_bernoulli` change
+model. Correlated changes require joint or empirical module probabilities.
 
 ## 7. Minimum description length
 

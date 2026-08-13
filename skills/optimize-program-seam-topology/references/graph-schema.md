@@ -7,14 +7,19 @@ does not parse source or certify attached evidence.
 ## Contract
 
 - UTF-8 JSON objects.
-- `schema_version` must be `2` in both documents.
+- `schema_version` must be `3` in both documents.
 - Duplicate JSON object members and unknown fields are invalid.
 - IDs are case-sensitive non-empty strings.
 - Costs are finite non-negative numbers.
 - Probabilities are in `[0,1]`.
 - Omitted numeric values default to zero except hyperedge `weight`, which
   defaults to one.
-- All objective values are minimized.
+- All objective values are minimized. `objective_rationals` is authoritative;
+  `objectives` is a presentation projection.
+- Identity canonicalization is type-tagged and exact for JSON numbers. Object
+  key order and set-like declaration order (vertices, edges, constraints,
+  observations, adapters, commands, artifacts, and nonclaims) do not change an
+  input identity; behaviorally ordered arrays are not silently reordered.
 - Output is versioned JSON on stdout. Invalid input is typed JSON on stderr
   with exit code `2`. `validate` returns `1` for a valid but infeasible
   candidate.
@@ -23,33 +28,66 @@ does not parse source or certify attached evidence.
 
 ```json
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "decision": {
     "id": "resolver-seam",
     "consumer": "project resolution refactor",
     "retirement_condition": "one accepted extraction with no dominating local move",
-    "source_identity": "git-tree-or-content-identity",
-    "protected_observations": ["resolve-corpus"],
-    "selection_rule": "Pareto order after hard feasibility",
+    "source_identity": {
+      "kind": "git_tree",
+      "repository": "powerbi-cli",
+      "revision": "0123456789abcdef0123456789abcdef01234567",
+      "tree_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "working_tree_state": "clean",
+      "dirty_patch_sha256": null
+    },
+    "protected_observations": [
+      {
+        "id": "resolve-corpus",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ],
+    "selection_rule": "pareto_after_hard_feasibility",
     "prior_decision_receipts": []
   },
+  "change_model": "independent_bernoulli",
   "module_overhead_bits": 0,
   "semantic_steps": 0,
-  "vertices": [],
+  "vertices": [
+    {"id": "schedule", "kind": "phase", "current_module": "core"},
+    {"id": "terrain", "kind": "state", "current_module": "world"}
+  ],
   "hyperedges": [],
   "constraints": [],
-  "semantic_constraints": [],
+  "semantic_constraints": [
+    {
+      "id": "resolver-parity",
+      "required": true,
+      "observation": "resolve-corpus",
+      "evidence_kind": "executed_observation",
+      "required_closure": "complete_for_declared_corpus",
+      "negative_control_id": "escaping-reference-mutant"
+    }
+  ],
   "nonclaims": ["the graph is not a complete source-program model"]
 }
 ```
 
 The decision object and non-empty nonclaim list are mandatory. Source identity
-must bind the exact analyzed checkout/tree/dirty patch or another explicit
-content identity; a branch name is insufficient. Protected observation IDs are
-the only observations semantic constraints may reference. The selection rule
-must be declared before scoring. Prior decision receipts may bind accepted,
-rejected, or superseded architecture decisions by stable ID and exact SHA-256;
-this prevents rediscovering and silently retrying a previously falsified seam.
+is a strict object for a `git_tree` or `content_manifest`; it binds repository,
+revision, SHA-256 tree/content manifest, explicit working-tree state, and a
+mandatory nullable dirty-patch field. A dirty Git tree requires the patch hash;
+a clean Git tree requires null; a content manifest uses `not_applicable` and
+null. A branch name is invalid. Every protected observation binds an exact observation
+manifest. Every protected observation must have at least one required semantic
+constraint or the candidate is infeasible. The only implemented local
+selection rule is `pareto_after_hard_feasibility`. Prior decision receipts make
+accepted, rejected, or superseded decisions visible and identity-bound; the
+consumer owns any reopening policy.
+
+`change_model` is mandatory and currently must be `independent_bernoulli`.
+That assumption is part of the meaning of `expected_rebuild_ms`; correlated
+change requires a different declared estimator, not silent reuse of this one.
 
 ## Vertex
 
@@ -174,13 +212,16 @@ These describe revision-bound evidence obligations:
   "id": "resolver-parity",
   "required": true,
   "observation": "resolve-corpus",
+  "evidence_kind": "executed_observation",
   "required_closure": "complete_for_declared_corpus",
   "negative_control_id": "escaping-reference-mutant"
 }
 ```
 
 Each constraint needs an observation declared in the decision, an exact
-required closure, and an exclusive strict negative-control ID. Supported
+required closure, and an `evidence_kind`. `executed_observation` requires an
+exclusive strict `negative_control_id`; `checked_certificate` forbids that
+field and instead requires a proof artifact in its evidence. Supported
 closures are `observed_only`, `sampled`,
 `complete_for_declared_corpus`, `exhaustive_finite`, and
 `sound_overapproximation`.
@@ -189,7 +230,7 @@ closures are `observed_only`, `sampled`,
 
 ```json
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "id": "resolver-module-extraction",
   "subject_identity": "candidate-executable-or-tree-identity",
   "assignments": {
@@ -203,25 +244,29 @@ closures are `observed_only`, `sampled`,
     "resolver-parity": {
       "semantic_constraint_id": "resolver-parity",
       "subject_identity": "candidate-executable-or-tree-identity",
+      "candidate_semantics_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "kind": "executed_observation",
       "claim_id": "resolver-parity-claim",
       "closure": "complete_for_declared_corpus",
       "status": "accepted",
       "plan_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "receipt_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-      "evaluator_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-      "skill_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "evaluator_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "skill_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "procedure_manifest_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
       "commands": ["kerf-evidence execute plan.json --require-accepted"],
       "artifacts": ["evidence/package.json"],
       "negative_control": {
         "id": "escaping-reference-mutant",
         "status": "passed",
-        "receipt_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        "receipt_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
       }
     }
   },
   "adapters": [
     {
       "id": "old_abi_facade",
+      "implementation_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
       "cost": 3,
       "removal_condition": "all managed callers use v3"
     }
@@ -232,9 +277,8 @@ closures are `observed_only`, `sampled`,
 
 ### Assignments
 
-Every surviving representative needs an assignment. Replaced vertices do not.
-Assignments for replaced but known vertices are ignored; unknown IDs are an
-error.
+Every surviving representative needs exactly one assignment. Replaced vertices
+must not retain an assignment; unknown and inactive IDs are errors.
 
 ### Replacements
 
@@ -248,29 +292,42 @@ Attach semantic constraints and real translation/conformance evidence.
 ### Evidence
 
 Each required semantic ID needs one accepted identity-bound claim at the exact
-required closure, at least one command or artifact, and one exclusively owned
-passing strict negative control. Plan, receipt, evaluator, skill, and control
-receipt hashes must be 64 lowercase hexadecimal SHA-256 values. Claim IDs and
-control IDs cannot be shared across semantic constraints. Evidence without a
-declared semantic-constraint owner is invalid. A negative control cannot reuse
-the positive claim receipt.
+required closure. It binds both the explanatory `subject_identity` and the
+derived `candidate_semantics_sha256`, whose projection includes the complete
+normalized graph hash, content source, protected observations, semantic
+constraints, assignments, replacements, and adapters but excludes evidence
+itself. This conservative binding means even an objective-only graph edit
+invalidates evidence; in exchange, hand-authored or imported topologies cannot
+replay receipts across graph changes. Run `score` once with empty evidence to
+obtain this stable hash, then attach receipts.
 
-The evaluator checks this binding shape and includes its own current evaluator
-and skill hashes in every result. It does not execute commands, open artifacts,
-or authenticate the supplied hashes. Use Semantic Architecture's executed
-evidence kernel to produce and audit receipts when physical execution matters.
+Executed observations need a command or artifact and one exclusively owned
+passing strict negative control. Checked certificates need a proof artifact and
+forbid an empirical control. Plan, receipt, evaluator, skill, procedure
+manifest, and control receipt hashes are lowercase SHA-256 values. Claim IDs,
+claim receipts, control IDs, and control receipts cannot be shared across
+semantic constraints; claim and control receipt sets are globally disjoint.
+Evidence without a declared owner is invalid.
+
+The evaluator checks this binding shape and includes its own current evaluator,
+skill, and normative procedure-manifest hashes in every result. Evidence kinds
+are declarations emitted by the upstream evidence authority, not a classifier:
+this evaluator does not infer whether an artifact is empirical or formal. It
+also does not execute commands, open artifacts, or authenticate supplied
+hashes. Use Semantic Architecture's executed-evidence kernel to authenticate
+the source state, classify the procedure, produce receipts, and audit the
+claimed sentence and closure. A presence-only artifact is not a certificate.
 
 ### Adapters
 
-Adapters need a non-empty ID and removal condition. An optional non-negative
-`cost` contributes to migration cost. A missing removal condition makes the
-candidate infeasible.
+Adapters need a non-empty ID, exact implementation SHA-256, and removal
+condition. An optional non-negative `cost` contributes to migration cost. A
+missing removal condition makes the candidate infeasible.
 
 ## Objective formulas
 
 The evaluator reports:
 
-- `duplicate_authority`: excess distinct representatives per authority key;
 - `sync_work`: `weight * frequency * max(volume,1) * crossings` for cut sync
   edges;
 - `mutable_cut`: the same expression for mutable/write edges;
@@ -283,10 +340,14 @@ The evaluator reports:
 - `edit_contention`: declared history/collision edge penalty;
 - `runtime_cut_cost`: `runtime_cost * frequency * crossings`;
 - `memory_bytes`: surviving memory + cut boundary memory;
-- `expected_rebuild_ms`: for each module, sum compile cost times `1 - product(1
-  - change_probability)`;
-- `migration_cost`: moved/replaced vertex and adapter costs; and
-- `proof_deficit`: required semantic constraints lacking shaped evidence.
+- `expected_rebuild_ms`: under `independent_bernoulli`, for each module, sum
+  compile cost times `1 - product(1 - change_probability)`; and
+- `migration_cost`: moved/replaced vertex and adapter costs.
+
+`duplicate_authority` and `proof_deficit` are reported under `diagnostics` and
+as hard violations where nonzero. They never participate in Pareto dominance.
+All arithmetic and dominance use exact fractions serialized under
+`objective_rationals`; the parallel `objectives` map is display-only.
 
 These are transparent estimators. Use one graph scope and unit system when
 comparing candidates. Replace the estimator, not its result, when the domain
@@ -306,7 +367,8 @@ python3 scripts/fold_graph.py validate --graph graph.json --candidate candidate.
 ### Score
 
 Returns feasibility, objective vector, resolved ownership, every cut, and exact
-canonical graph/candidate plus evaluator/skill identities:
+graph/candidate, candidate-semantics, evaluator, skill, and procedure-manifest
+identities:
 
 ```bash
 python3 scripts/fold_graph.py score --graph graph.json --candidate candidate.json
@@ -314,20 +376,23 @@ python3 scripts/fold_graph.py score --graph graph.json --candidate candidate.jso
 
 ### Single-move frontier
 
-Moves one surviving representative between existing modules, rejects infeasible
-or baseline-dominated moves, and returns a bounded Pareto frontier:
+Moves one surviving representative between existing modules, rejects
+structurally infeasible or baseline-dominated moves, and returns a bounded
+Pareto frontier:
 
 ```bash
 python3 scripts/fold_graph.py moves --graph graph.json --candidate candidate.json --limit 25
 ```
 
-This command does not synthesize replacement, rewiring, adapter, or new-module
-moves. Its purpose is to challenge a human candidate with cheap local
-alternatives.
+Generated moves discard baseline evidence and are marked `evidence_status:
+pending`; stale evidence is never inherited. The structural frontier is a
+conservative superset: any structural dominator must be evidenced before
+acceptance. This command does not synthesize replacement, rewiring, adapter, or
+new-module moves.
 
 ### Evaluator identity
 
-Obtain the exact script and skill-manual hashes before binding external
+Obtain the exact script, skill-manual, and normative procedure-manifest hashes before binding external
 evidence:
 
 ```bash
@@ -335,9 +400,9 @@ python3 scripts/fold_graph.py identity
 ```
 
 The same hashes are included in every score, moves, and convergence result. A
-same-version code or skill edit therefore changes the result identity.
+same-version code or normative reference edit therefore changes result identity.
 
-### Bounded local convergence
+### Bounded local Pareto stationarity
 
 Run the complete single-representative/existing-module generator and compute a
 canonical state:
@@ -350,13 +415,16 @@ python3 scripts/fold_graph.py converge \
   --prior-state-sha256 <first-state-sha256>
 ```
 
-Only a feasible baseline, no strictly dominating move, full generator
-exhaustion, and an unchanged second state return
-`bounded_single_move_fixed_point`. A stale prior returns `state_changed`; an
-available strict improvement returns `open_dominating_candidate`.
+One accepted baseline, no strictly dominating structural move, and full
+generator exhaustion return `bounded_single_move_pareto_stationary` on the
+first pass. Supplying its unchanged state SHA-256 returns
+`bounded_single_move_pareto_stationary_confirmed`; this only confirms
+idempotence. A stale prior returns `state_changed`; an available strict
+structural improvement returns `open_structural_dominator_pending_evidence`.
 
 This is exact only for moving one active representative among modules already
 present in the candidate. It does not exhaust replacements, adapters, new
 modules, rewiring, multi-move migration paths, source-model recovery, or the
-space of future falsifiers. The command cannot attest that an external
-discovery sweep took place.
+space of future falsifiers. The command does not interpret the free-text
+retirement condition and cannot attest an external discovery sweep or campaign
+fixed point. Semantic Architecture owns those claims.

@@ -37,12 +37,14 @@ Separate three problems that are often mistakenly collapsed:
 Name the implementation or migration decision, its consumer, and the evidence
 that retires the analysis. Do not create a permanent architecture dashboard.
 
-Record a stable decision ID, consumer, retirement condition, source identity,
+Record a stable decision ID, consumer, retirement condition, content-bound source identity,
 scope, supported workloads, compatibility posture, and whether the work is
 diagnosis, design, or implementation. Give every protected observation a stable
-ID. Read the repository's instructions before extracting evidence.
-Bind prior accepted, rejected, or superseded architecture decisions when they
-bear on the same seam. A large file, old plan, or attractive diagram is not a
+ID plus an observation-manifest SHA-256. Read the repository's instructions
+before extracting evidence. Bind prior accepted, rejected, or superseded
+architecture decisions when they bear on the same seam. Receipts make prior
+decisions visible and identity-bound; reopening policy remains with the named
+decision consumer. A large file, old plan, or attractive diagram is not a
 reason to reopen a previously falsified migration without new evidence.
 
 ### 2. Define protected observations
@@ -51,8 +53,11 @@ List the externally or semantically observable facts that must remain invariant:
 state traces, arithmetic width, ordering, identity, allocation, randomness,
 reset, persistence, failure behavior, ABI, timing bounds, or security rules.
 
-Give each invariant a named observation function, required closure, exclusive
-strict negative control, and revision-bound evidence route. Distinguish:
+Give each invariant a named observation function, exact manifest identity,
+required closure, and revision-bound evidence route. Executed observations
+need an exclusive strict negative control. Locally checked Behavioral
+Factorization certificates need an authenticated proof artifact instead; do
+not manufacture an empirical mutant for a theorem. Distinguish:
 
 - exact trace equivalence;
 - refinement, where the target may contain unobservable internal steps;
@@ -86,11 +91,14 @@ semantics intentionally includes replication or event-sourced authority. A
 cache, projection, or replica must state its source/protocol, validity interval,
 and invalidation or consistency rule.
 
-Evidence for a fold must bind the exact candidate subject, claim, closure,
-plan/receipt, evaluator, skill procedure, and one exclusively owned passing
-negative control. Reject orphan evidence and shared controls. A command string
-or artifact path by itself is not proof; use Semantic Architecture executed
-evidence when the decision needs physical execution or parity.
+Evidence for a fold must bind the exact candidate label and derived candidate
+semantics SHA-256, claim, closure, plan/receipt, evaluator, skill, and procedure
+manifest. Executed observations additionally bind one exclusively owned
+passing negative control; checked certificates bind a proof artifact. Reject
+orphan evidence, shared claim/control receipts, and evidence inherited by a
+changed assignment, replacement, or adapter. A command string or artifact path
+by itself is not proof; use Semantic Architecture executed evidence when the
+decision needs physical execution or parity.
 
 ### 5. Generate candidate folds
 
@@ -107,7 +115,6 @@ requires them.
 Reject hard-constraint violations first. For remaining candidates report the
 objective vector and Pareto dominance:
 
-- duplicate mutable authority;
 - synchronization frequency and volume;
 - mutable and ordered boundary cuts;
 - fixed-codec boundary information rate;
@@ -116,8 +123,12 @@ objective vector and Pareto dominance:
 - edit contention;
 - runtime and memory cost;
 - expected rebuild cost;
-- migration cost; and
-- proof or observability deficit.
+- migration cost.
+
+Duplicate authority and proof deficit are hard-feasibility diagnostics, not
+finite objectives. The deterministic evaluator supports only exact Pareto
+order after hard feasibility. Lexicographic or epsilon decision policy belongs
+in Semantic Architecture until it has a typed executable rule here.
 
 Use lexicographic priority levels or epsilon constraints for policy. Use a
 weighted scalar only when weights have empirical units, provenance, and
@@ -169,11 +180,15 @@ Report:
 Do not report a single mystical “energy.” Preserve the vector and the hard
 constraints that made it meaningful.
 
-When the user wants one exhaustive run, use an adaptive campaign. Recompute
-only affected evidence after an accepted move, retain counterexamples, and stop
-only at a declared fixed point. A second identical static scan is not new
-knowledge. Read [pilot-accretion.md](references/pilot-accretion.md) for the
-failure modes mined from Dispersion and PowerBI.
+When the user wants one exhaustive run, use Semantic Architecture to own the
+adaptive campaign, invalidation graph, retirement condition, and fixed-point
+claim. Seam Topology supplies finite candidate generators and local Pareto
+stationarity receipts; Behavioral Factorization supplies exact finite proof or
+counterexample receipts. Recompute only affected evidence after an accepted
+move and retain counterexamples. A second identical static scan is only an
+idempotence check, not new knowledge. Read
+[pilot-accretion.md](references/pilot-accretion.md) for the failure modes mined
+from Dispersion, PowerBI, and OOXML CLI.
 
 ## Deterministic evaluator
 
@@ -192,18 +207,25 @@ python3 scripts/fold_graph.py self-test
 The output is versioned JSON on stdout. Diagnostics and typed failures go to
 stderr with nonzero exit status. Read
 [graph-schema.md](references/graph-schema.md) before constructing inputs. The
-v2 evaluator rejects duplicate JSON members and unowned evidence, binds output
-to canonical graph/candidate plus evaluator/skill hashes, and requires exact
-claim/control metadata. It does not execute or authenticate the referenced
-receipts and cannot establish semantic truth by itself.
+v3 evaluator rejects duplicate JSON members and unowned evidence, requires
+content-bound source and observation manifests, binds evidence to a derived
+candidate-semantics hash, uses exact rational arithmetic for dominance, and
+binds output to graph/candidate plus evaluator/skill/procedure-manifest hashes.
+It distinguishes executed evidence from checked certificates and enforces
+global claim/control receipt ownership. It does not execute or authenticate
+the referenced receipts, classify a procedure as empirical versus formal, or
+establish semantic truth by itself. Semantic Architecture must authenticate the
+source/worktree state and verify that a checked certificate actually proves the
+bound claim at the declared closure; a file hash alone is never proof.
 
 `converge` enumerates the complete declared one-representative move generator
-over existing modules. First run it without `--prior-state-sha256`; if no
-strictly dominating move exists, run it again with the emitted state hash. Only
-an unchanged second result may return `bounded_single_move_fixed_point`. This
-is a local Pareto result for that finite generator—not repository-wide
-exhaustion, a global optimum, or evidence that an external discovery sweep
-happened.
+over existing modules. Generated moves discard baseline evidence and are
+evaluated as a conservative structural superset with evidence pending. If no
+structural move strictly Pareto-dominates an accepted baseline, one pass returns
+`bounded_single_move_pareto_stationary`. Repeating with the emitted state hash
+can only add `..._confirmed`; it is not a campaign fixed point. The result is
+not repository-wide exhaustion, a global optimum, enforcement of the free-text
+retirement condition, or evidence that an external discovery sweep happened.
 
 ## Protein-folding lens
 

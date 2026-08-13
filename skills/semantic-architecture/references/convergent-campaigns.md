@@ -88,6 +88,15 @@ and candidate generators were enumerated completely. Return
 `budget_exhausted_with_unknowns` when any resource bound fires first. A time or
 mutation budget is never a success criterion.
 
+A Program Seam Topology
+`bounded_single_move_pareto_stationary` receipt discharges exactly one declared
+local generator. It is never, by itself, evidence that the campaign frontier is
+exhausted: pending dominating neighbors keep the campaign open, and replacement,
+adapter, new-module, rewiring, source-discovery, and multi-move generators remain
+open unless the decision contract explicitly excludes them. If the contract
+deliberately declares only the single-move universe, any success is bounded to
+that universe and must retain that limitation in the result.
+
 ## Reopening and information gain
 
 Do not rerun an unchanged deterministic campaign. Reopen when at least one of
