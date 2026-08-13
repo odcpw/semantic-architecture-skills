@@ -1,4 +1,4 @@
-# Dispersion and PowerBI accretion
+# Dispersion, PowerBI, and OOXML accretion
 
 This reference records only project evidence that changed the reusable seam
 workflow. It is not a generic claim that every repository has these failure
@@ -19,6 +19,10 @@ modes.
 | The PowerBI resolver extraction had no strictly better one-move reassignment but retained legitimate tradeoffs | Preserve the Pareto frontier and name the enumerated generator | Stationarity means no dominating one-representative structural move among existing modules, not global optimality |
 | The Dispersion split seam was Pareto-dominated yet useful as a proof surface | Predeclare the consumer decision instead of selecting a score post hoc | Every graph requires decision ID, consumer, retirement condition, source identity, and protected observations |
 | OOXML CLI's 75 KiB top-level dispatcher looked like the next monolith, but its completed command-manifest research had already falsified a broader typed-routing migration as duplication without simplification | Bind prior accepted/rejected architecture decisions and challenge file-size heuristics before reopening a seam | A prior decision receipt changes graph identity; a large file alone cannot satisfy the selection rule or semantic evidence gate |
+| OOXML mutation sites called strict validation but discarded a rejecting report, so invalid packages were published with success | Trace verdict dataflow and distinguish observer execution from acceptance authority | A mutation whose validator returns a rejecting report must fail and preserve its input |
+| The first gate fix still wrote a distinct `--out` before validation and deleted a pre-existing destination on rejection | Treat destination state, artifact ownership, and commit point as protected observations | A sentinel at an existing destination survives rejection byte-for-byte |
+| Destination-local staging initially leaked private stage paths in PPTX chart readback and skipped publication on one branch | Require valid-candidate committed-path readback and result-path checks in the transaction corpus | The public result names the committed destination, the destination exists, and no private stage path appears |
+| DOCX, PPTX, XLSX, and VBA shared the same six-state mutation protocol while retaining family-specific implementation context | Use Behavioral Factorization to test a context-retained protocol fold, then require executed source evidence separately | The supplied finite factor is lawful across every reachable family/context state; source correspondence remains an observed claim |
 
 ## Campaign rule
 

@@ -67,6 +67,17 @@ Use `kerf-observe` to obtain reality contact: its repeated raw observations,
 negative control, and trace certificate can support an observed claim, but not
 an exhaustive behavior claim.
 
+For mutation or publication decisions, distinguish an **observer** from an
+**assertion boundary**. A checker can execute successfully while returning a
+report that rejects the candidate; `Ok(report)`, exit zero from a library call,
+or a discarded verdict is not acceptance. Model the caller-owned stage, any
+borrowed input, the pre-existing destination, explicit bypass, readback, backup,
+and commit point as separate entities/transitions. Challenge the model with an
+invalid candidate, a pre-existing-destination sentinel, and a successful
+committed-path readback. Acceptance must control publication, rejection must
+preserve borrowed and pre-existing artifacts, and returned commands must not
+leak a private staging identity.
+
 Observation plans execute their declared programs without a sandbox, timeout,
 or output cap. Inspect every invocation and run only commands the operator has
 authorized for the target system.

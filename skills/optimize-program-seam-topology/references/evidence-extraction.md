@@ -147,6 +147,26 @@ one candidate can commit and failure is atomic. Its copy cost remains an
 objective. A synchronized writable mirror is duplicate authority until proven
 otherwise.
 
+For every mutation transaction, extract the verdict dataflow and publication
+point, not merely calls to a validator. Record whether a checker result is
+asserted, discarded, or converted to an exit/status decision; whether the
+artifact is borrowed or caller-owned; where readback occurs; and which path is
+visible after commit. Probe at least these cases:
+
+```text
+invalid stage + absent destination
+invalid stage + pre-existing destination sentinel
+valid stage + committed-path readback
+explicit validation bypass
+publish failure + restoration of prior destination
+```
+
+A direct `--out` write is already publication, even if validation follows it.
+Destination-local staging plus one publication authority is a candidate fold;
+its temporary path must not escape through result JSON, follow-up commands, or
+subsequent readback. Cleanup of a rejected owned stage must never be generalized
+to borrowed inputs or long-lived working copies.
+
 For exact topology, use an observational test: if a backward slice from a
 protected future observation reaches slot/list/queue order or identity, the
 topology is semantic. Otherwise a counterfactual reorder with fixed logical

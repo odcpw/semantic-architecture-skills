@@ -158,6 +158,10 @@ Test at least these counter-hypotheses:
 - a generic interface erases ordering or identity;
 - the proposed fold improves one workload while regressing another;
 - file size is being mistaken for a semantic or ownership boundary;
+- a checker call is being mistaken for an asserted verdict because its report
+  or exit decision is discarded;
+- validation follows direct publication, or a private stage/destination
+  identity leaks through readback and result contracts;
 - a prior rejected architecture is being repeated without a changed falsifier;
 - the result is sensitive to one arbitrary coefficient; and
 - the migration contains a kinetic trap: a locally tidy state that blocks the
