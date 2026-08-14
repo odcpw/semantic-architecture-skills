@@ -60,6 +60,7 @@ cargo run --quiet --bin kerf-generate -- registry
 cargo run --quiet --bin kerf-generate -- bind-envelope REQUEST.json
 cargo run --quiet --bin kerf-generate -- generate REQUEST.json --require-complete
 cargo run --quiet --bin kerf-generate -- validate REQUEST.json BATCH.json
+cargo run --quiet --bin kerf-metabolize -- execute REQUEST.json BATCH.json PLAN.json --require-accepted
 ```
 
 All success data is versioned JSON on stdout. Errors are typed JSON on stderr.
@@ -207,6 +208,29 @@ behavioral factors through Kerf, boundary changes through Seam Topology, and
 code changes through isomorphic transformation plus executed evidence. A
 bounded or skipped source inventory returns `coverage.complete=false`; never
 turn it into generator exhaustion.
+
+## Metabolize accepted source changes
+
+Use `kerf-metabolize` after selecting a generated brownfield candidate. It
+copies declared paths into fresh baseline and candidate workspaces outside the
+source repository, verifies every source and executable content binding, and
+applies typed replacements or file construction only to the candidate copy.
+Read the metabolism section of
+[transformation-generation.md](references/transformation-generation.md) before
+authoring a plan.
+
+The gate requires all protected observations and hard constraints to be owned
+by named checks, at least one deliberately failing negative control, and a
+probe for every metric in the purpose envelope. Acceptance requires changed
+source bytes, declared success or exact stdout parity, discriminating controls,
+improvement on at least one coordinate, no forbidden regression, and a freshly
+rebuilt semantic model naming the computed post-change source revision.
+
+After an accepted isolated receipt, land exactly the accepted mutations through
+the repository's normal review and Git workflow. Then bind the landed revision,
+rebuild rather than manually edit the model, and generate the next move under
+the same purpose envelope. Retain completed rejections, prediction mismatches,
+and their counterexamples as learning evidence.
 
 Do not repeat an expensive pass when subject revision, evidence, falsifiers,
 providers, bounds, and decision contract are unchanged. A second invocation on

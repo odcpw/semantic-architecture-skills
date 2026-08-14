@@ -77,7 +77,44 @@ invalidates the batch.
 ## Next boundary
 
 The generator deliberately emits typed operations rather than source patches.
-The apply/verify/rebuild layer must translate an operation through the matching
-skill, mutate only an isolated target, execute every proof obligation, measure
-every metric, reject regressions or incomparable policy violations, and rebuild
-the semantic model before the campaign can continue.
+Translate a selected operation into `kerf.metabolism-plan.v1` through the
+matching specialist and run `kerf-metabolize`. It mutates only an isolated
+candidate, executes bound checks and negative controls, measures every metric,
+rejects forbidden regressions, and rebuilds the semantic model before the
+campaign continues. See
+the metabolism contract below.
+
+## Transformation metabolism
+
+`kerf-metabolize` executes one typed, content-bound materialization plan and
+returns a receipt that can be refuted without losing the counterexample:
+
+```bash
+kerf-metabolize execute REQUEST.json BATCH.json PLAN.json --require-accepted
+```
+
+The request owns purpose, constraints, metrics, and the brownfield subject. The
+batch owns the replayable generated candidate and predictions. The metabolism
+plan owns exact source bindings, mutations, commands, negative controls,
+probes, isolation bounds, and model rebuild.
+
+The workspace root must be new, absolute, and outside the source repository.
+The executor creates baseline and candidate copies, rejects links and special
+files, clears inherited command environments, invokes no shell, and rechecks
+absolute program hashes immediately before spawn. It has no sandbox, timeout,
+or output cap, so inspect and authorize the commands. Existing mutation targets
+carry preimage hashes and exact replacement counts; created files carry their
+content and postimage hash. The post-change revision is computed from ordered
+source paths and hashes rather than caller asserted.
+
+Acceptance requires effective source changes; exact coverage of protected
+observations, hard constraints, and metric probes; passing behavior checks and
+negative controls; at least one measured improvement; no forbidden regression;
+a closed predicted-versus-measured ledger; and a structurally valid rebuilt
+model naming the computed revision. Without `--require-accepted`, a completed
+rejection remains exit-zero JSON. With it, rejection exits 3. Invalid bindings
+exit 2, internal failures 4, and operating-system failures 5.
+
+The receipt is not a publication receipt. Land the accepted mutations through
+the target repository's normal Git workflow, then bind the landed revision,
+rebuild the model, and generate again under the same envelope.

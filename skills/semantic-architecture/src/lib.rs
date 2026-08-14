@@ -4,6 +4,7 @@ pub mod cycle;
 pub mod execution;
 pub mod generate;
 pub mod manifest;
+pub mod metabolize;
 pub mod observe;
 pub mod semantic;
 

@@ -116,6 +116,7 @@ identity starts a new search basis.
 7. When no accepted change remains, run complete quiescent confirmation sweeps
    until the computed status is terminal or the budget ends with unknowns.
 
-The apply/verify/rebuild controller is the next implementation layer. Until it
-exists, `kerf-cycle` is an executable state and stopping kernel, not an
-autonomous optimizer.
+Use `kerf-metabolize` for the apply/verify/measure/rebuild transition described
+in [transformation-generation.md](transformation-generation.md). It closes one
+candidate decision in isolated copies; `kerf-cycle` remains the authority for
+the multi-move frontier and stopping state.
