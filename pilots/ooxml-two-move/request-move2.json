@@ -1,0 +1,162 @@
+{
+  "schema_version": "kerf.transformation-request.v1",
+  "request_id": "ooxml-two-move-pilot-v2",
+  "search_basis_sha256": "67d124721ddb573f3bb3c3fdda831ae9553c497b49f055b66d0514d985bfb6cd",
+  "subject": {
+    "mode": "brownfield",
+    "repository_root": "/home/oliver/Projects/odcpw/ooxml-cli-kerf-baseline2",
+    "revision": "1e4f67c91374339b645e517312a366791c963e4b",
+    "source_tree_sha256": "8c160185d7ab2201289bc17f48087c0ae72e2aa9a6519903cb07b9e3c0da8168"
+  },
+  "envelope": {
+    "envelope_id": "ooxml-agent-cli-purpose-v1",
+    "purpose_sha256": "544a6f9aa50d66f54576ef4e93a38bbb459a0fe15926617982ddc4b3d81b9105",
+    "environment_sha256": "d77f310a1cb9784a79e1d204a5f93bf21c3ff1b598fe68e9a6c72b44738fab00",
+    "hard_constraints_sha256": "59b8330dff75c7c9e144ecbb362aa7413c856e702e7f69618b54b5fa895acd9b",
+    "metric_policy_sha256": "9d4dd41aa310190fda4240daf8815fa9fee855ea12e0cb31dacdcc5bde9de68b",
+    "transformation_policy_sha256": "2a4c9f049cfbf8bdc20c824aae41e13fde50d61e583a69a88d18363bc167746f"
+  },
+  "purpose": {
+    "purpose_id": "ooxml-agent-cli",
+    "capabilities": [
+      {
+        "id": "inspect_package",
+        "responsibility": "inspect OOXML packages through stable machine-readable output",
+        "reads": [
+          "package_bytes"
+        ],
+        "writes": []
+      },
+      {
+        "id": "mutate_package",
+        "responsibility": "perform explicit package mutations without corrupting unrelated parts",
+        "reads": [
+          "package_bytes"
+        ],
+        "writes": [
+          "package_bytes"
+        ]
+      },
+      {
+        "id": "validate_package",
+        "responsibility": "reject malformed or unsupported packages with typed diagnostics",
+        "reads": [
+          "package_bytes"
+        ],
+        "writes": []
+      },
+      {
+        "id": "publish_agent_contract",
+        "responsibility": "describe live OOXML operations and limits to automated consumers",
+        "reads": [
+          "command_contract"
+        ],
+        "writes": [
+          "command_contract"
+        ]
+      }
+    ],
+    "facts": [
+      {
+        "id": "package_bytes",
+        "description": "authoritative bytes of the input or explicitly emitted output package",
+        "writers": [
+          "mutate_package"
+        ],
+        "readers": [
+          "inspect_package",
+          "mutate_package",
+          "validate_package"
+        ]
+      },
+      {
+        "id": "command_contract",
+        "description": "machine-readable command and capability contract",
+        "writers": [
+          "publish_agent_contract"
+        ],
+        "readers": [
+          "publish_agent_contract"
+        ]
+      }
+    ],
+    "protected_observations": [
+      {
+        "id": "capabilities_json",
+        "statement": "the range capability query emits identical versioned JSON",
+        "capability_ids": [
+          "publish_agent_contract"
+        ]
+      },
+      {
+        "id": "library_contracts",
+        "statement": "the complete Rust library test contract remains green",
+        "capability_ids": [
+          "inspect_package",
+          "mutate_package",
+          "validate_package",
+          "publish_agent_contract"
+        ]
+      }
+    ]
+  },
+  "environment": {
+    "environment_id": "linux-rust-1.96",
+    "contexts": [
+      "Linux CLI",
+      "direct OOXML ZIP/XML processing",
+      "agent JSON consumer"
+    ],
+    "assumptions": [
+      "desktop Office execution is outside this pilot",
+      "Rust library and CLI checks are authoritative only for their declared corpus"
+    ]
+  },
+  "hard_constraints": [
+    {
+      "id": "rust_library_green",
+      "statement": "all Rust library tests pass with the locked dependency graph",
+      "affected_capability_ids": [
+        "inspect_package",
+        "mutate_package",
+        "validate_package",
+        "publish_agent_contract"
+      ]
+    },
+    {
+      "id": "capability_contract_stable",
+      "statement": "the range capability JSON is byte-identical",
+      "affected_capability_ids": [
+        "publish_agent_contract"
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "id": "rust_nonblank_lines",
+      "unit": "lines",
+      "direction": "minimize",
+      "role": "description_cost"
+    },
+    {
+      "id": "duplicate_window_excess",
+      "unit": "windows",
+      "direction": "minimize",
+      "role": "description_cost"
+    }
+  ],
+  "policy": {
+    "allowed_families": [
+      "isomorphic_simplification"
+    ],
+    "source_extensions": [
+      "rs"
+    ],
+    "planned_source_root": "src",
+    "max_files": 500,
+    "max_bytes_per_file": 200000,
+    "max_depth": 12,
+    "minimum_duplicate_lines": 16,
+    "max_candidates": 2000
+  }
+}

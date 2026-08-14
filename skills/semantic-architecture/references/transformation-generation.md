@@ -107,6 +107,11 @@ carry preimage hashes and exact replacement counts; created files carry their
 content and postimage hash. The post-change revision is computed from ordered
 source paths and hashes rather than caller asserted.
 
+Interpreter scripts, model templates, fixtures, and other absolute files read
+by a command belong in its `external_files` list. Their hashes are rechecked
+with the executable before every spawn; an interpreter hash alone does not bind
+the script it executes.
+
 Acceptance requires effective source changes; exact coverage of protected
 observations, hard constraints, and metric probes; passing behavior checks and
 negative controls; at least one measured improvement; no forbidden regression;

@@ -8,9 +8,9 @@ use semantic_architecture::generate::{
     hard_constraints_sha256, metric_policy_sha256, purpose_sha256, transformation_policy_sha256,
 };
 use semantic_architecture::metabolize::{
-    BoundCommand, BoundProgram, BoundSourceFile, CheckKind, FileMutation, IsolationPolicy,
-    LiteralReplacement, METABOLISM_PLAN_SCHEMA, MetabolismPlan, MetabolismStatus, MetricProbe,
-    ModelRebuild, NegativeControl, VerificationCheck, execute_metabolism,
+    BoundCommand, BoundExternalFile, BoundProgram, BoundSourceFile, CheckKind, FileMutation,
+    IsolationPolicy, LiteralReplacement, METABOLISM_PLAN_SCHEMA, MetabolismPlan, MetabolismStatus,
+    MetricProbe, ModelRebuild, NegativeControl, VerificationCheck, execute_metabolism,
 };
 use std::collections::BTreeMap;
 use std::fs;
@@ -187,6 +187,7 @@ fn python_command(mode: &str) -> BoundCommand {
             path: program.to_owned(),
             sha256: digest_file(Path::new(program)),
         },
+        external_files: vec![],
         arguments: vec!["harness.py".to_owned(), mode.to_owned()],
         cwd: ".".to_owned(),
         environment: BTreeMap::new(),
@@ -336,4 +337,30 @@ fn a_forbidden_metric_regression_is_retained_as_a_counterexample() {
             .iter()
             .any(|item| item.contains("regressed"))
     );
+}
+
+#[test]
+fn a_drifted_interpreter_input_is_rejected_before_spawn() {
+    let fixture = Fixture::new();
+    let request = request(&fixture.source);
+    let batch = generate_transformations(&request).expect("generated candidates");
+    let candidate = batch
+        .candidates
+        .iter()
+        .find(|item| item.family == TransformationFamily::IsomorphicSimplification)
+        .expect("duplicate extraction candidate");
+    let external = fixture
+        .source
+        .parent()
+        .expect("fixture base")
+        .join("external-probe.py");
+    fs::write(&external, "print('bound')\n").expect("external input");
+    let mut plan = plan(&fixture, candidate.id.clone());
+    plan.checks[0].command.external_files = vec![BoundExternalFile {
+        path: external.display().to_string(),
+        sha256: digest_file(&external),
+    }];
+    fs::write(&external, "print('drifted')\n").expect("drift external input");
+    let error = execute_metabolism(&request, &batch, &plan).expect_err("drift must fail closed");
+    assert!(error.message.contains("external input"));
 }

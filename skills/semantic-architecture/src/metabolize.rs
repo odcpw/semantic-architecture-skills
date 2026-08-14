@@ -26,8 +26,17 @@ pub struct BoundProgram {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
+pub struct BoundExternalFile {
+    pub path: String,
+    pub sha256: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct BoundCommand {
     pub program: BoundProgram,
+    #[serde(default)]
+    pub external_files: Vec<BoundExternalFile>,
     #[serde(default)]
     pub arguments: Vec<String>,
     pub cwd: String,
@@ -649,7 +658,33 @@ fn verify_programs(plan: &MetabolismPlan) -> Result<(), ToolError> {
         .chain(std::iter::once(&plan.model_rebuild.command))
     {
         verify_program(&command.program)?;
+        for external in &command.external_files {
+            verify_external_file(external)?;
+        }
         validate_relative_or_dot(&command.cwd)?;
+    }
+    Ok(())
+}
+
+fn verify_external_file(file: &BoundExternalFile) -> Result<(), ToolError> {
+    let path = Path::new(&file.path);
+    if !path.is_absolute() {
+        return Err(ToolError::invalid(
+            "bound external input paths must be absolute",
+        ));
+    }
+    require_sha256(&file.sha256, "external input SHA-256")?;
+    let bytes = fs::read(path).map_err(|error| {
+        ToolError::io(format!(
+            "could not read bound external input {}: {error}",
+            path.display()
+        ))
+    })?;
+    if sha256_hex(&bytes) != file.sha256 {
+        return Err(ToolError::invalid(format!(
+            "bound external input {} does not match its SHA-256",
+            path.display()
+        )));
     }
     Ok(())
 }
@@ -919,6 +954,9 @@ fn run_command(
     revision: Option<(&str, &str)>,
 ) -> Result<RunOutput, ToolError> {
     verify_program(&command.program)?;
+    for external in &command.external_files {
+        verify_external_file(external)?;
+    }
     let cwd = if command.cwd == "." {
         root.to_path_buf()
     } else {
